@@ -1,0 +1,17 @@
+node_modules/
+dist/
+dist-ssr/
+*.local
+
+# Server
+server/data.sqlite
+server/data.sqlite-*
+server/.env
+
+# Client
+client/.env
+client/.env.local
+
+# Editor / OS
+.DS_Store
+*.log
