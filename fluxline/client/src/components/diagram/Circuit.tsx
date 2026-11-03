@@ -8,7 +8,7 @@
 //   D   x1,y1 x2,y2 [label]          diode, anode at the first point
 //   Z   x1,y1 x2,y2 [label]          generic impedance box
 //   SW  x1,y1 x2,y2 [label] [closed] switch
-//   W   x1,y1 x2,y2 [...]            wire (extra points continue the wire)
+//   W   x1,y1 x2,y2 [...] [dash] [color=anno|muted]  wire (extra points continue the wire)
 //   GND x,y      DOT x,y      T x,y [label]   ground, junction dot, open terminal
 //   OA  x,y [flip]                   op-amp: − input (x−1, y−0.5), + input (x−1, y+0.5), output (x+1, y)
 //   NMOS / PMOS x,y [label] [mirror] gate (x−1, y), drain/source at (x, y∓1); mirror puts the gate on the right
@@ -17,7 +17,7 @@
 //   AND/OR/NAND/NOR/XOR/XNOR x,y [n=2|3] [label]  logic gate: inputs at (x−1, y±0.4) (n=3: y−0.5, y, y+0.5), output (x+1, y)
 //   NOT/BUF x,y [label]              inverter/buffer: input (x−1, y), output (x+1, y)
 //   DFF x,y [label] [noqn]           D flip-flop: D (x−1.2, y−0.4), clock (x−1.2, y+0.4), Q (x+1.2, y−0.4), Q̄ (x+1.2, y+0.4)
-//   CIRCLE x,y r [dash] [color=anno]  plain circle of radius r (grid units)
+//   CIRCLE x,y r [dash] [color=anno|muted]  plain circle of radius r (grid units)
 //   STATE x,y name [out] [loop=label] [accept]  state bubble (r = 0.42); loop draws a self-transition above it
 //   MUX x,y [label]                  2:1 multiplexer: in0 (x−1, y−0.5), in1 (x−1, y+0.5), select (x, y+1.3), output (x+1, y)
 //   BOX x,y w,h [label]   SUM x,y [l=+ b=− ...]   ARROW x1,y1 x2,y2 [label]   LINE x1,y1 x2,y2 [dash]
@@ -35,6 +35,8 @@ const U = 56;
 const INK = '#0f172a';
 const ANNO = '#2563eb';
 const SW = 2;
+const MUTED = '#94a3b8';
+const strokeColor = (c?: string) => (c === 'anno' ? ANNO : c === 'muted' ? MUTED : INK);
 
 type Pt = [number, number];
 interface Line { kind: string; pts: Pt[]; words: string[]; opts: Record<string, string> }
@@ -115,10 +117,16 @@ export default function Circuit({ source }: { source: string }) {
     const { kind, pts, words, opts } = ln;
     const label = words.join(' ');
 
+    if (kind === 'W' && (opts.color || words.includes('dash'))) {
+      // Decorative curve (plots on diagrams, field lines): one polyline, no junction dots.
+      shapes.push(<polyline key={id()} points={pts.map((q) => `${q[0] * U},${q[1] * U}`).join(' ')} fill="none" stroke={strokeColor(opts.color)} strokeWidth={opts.color === 'muted' ? 1 : SW} strokeDasharray={words.includes('dash') ? '6 5' : undefined} strokeLinejoin="round" strokeLinecap="round" />);
+      pts.forEach((q) => grow(q[0] * U, q[1] * U));
+      continue;
+    }
     if (kind === 'W') {
       for (let i = 0; i + 1 < pts.length; i++) {
         const [a, b] = [pts[i], pts[i + 1]];
-        shapes.push(<line key={id()} x1={a[0] * U} y1={a[1] * U} x2={b[0] * U} y2={b[1] * U} stroke={opts.color === 'anno' ? ANNO : INK} strokeWidth={SW} strokeLinecap="round" />);
+        shapes.push(<line key={id()} x1={a[0] * U} y1={a[1] * U} x2={b[0] * U} y2={b[1] * U} stroke={INK} strokeWidth={SW} strokeLinecap="round" />);
         touch(a); touch(b);
       }
       if (opts.i && pts.length >= 2) {
@@ -336,7 +344,7 @@ export default function Circuit({ source }: { source: string }) {
     }
     if (kind === 'CIRCLE') {
       const [p] = pts; const r = Number(words.find((w) => /^[\d.]+$/.test(w)) ?? 1) * U;
-      shapes.push(<circle key={id()} cx={p[0] * U} cy={p[1] * U} r={r} fill="none" stroke={opts.color === 'anno' ? ANNO : INK} strokeWidth={1.6} strokeDasharray={words.includes('dash') ? '6 5' : undefined} />);
+      shapes.push(<circle key={id()} cx={p[0] * U} cy={p[1] * U} r={r} fill="none" stroke={strokeColor(opts.color)} strokeWidth={opts.color === 'muted' ? 1 : 1.6} strokeDasharray={words.includes('dash') ? '6 5' : undefined} />);
       grow(p[0] * U - r, p[1] * U - r); grow(p[0] * U + r, p[1] * U + r);
       continue;
     }
