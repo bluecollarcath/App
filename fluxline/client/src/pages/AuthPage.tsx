@@ -74,7 +74,7 @@ export default function AuthPage({ mode }: { mode: 'login' | 'signup' }) {
           <button disabled={busy} className="btn-primary w-full py-2.5">{busy ? 'Please wait…' : mode === 'login' ? 'Sign in' : 'Create account'}</button>
         </form>
         <p className="mt-6 text-center text-sm text-slate-500">
-          {mode === 'login' ? <>New to Phasorly? <Link to="/signup" className="font-semibold text-volt">Create an account</Link></> : <>Already have an account? <Link to={`/login${plan ? `?plan=${plan}` : ''}`} className="font-semibold text-volt">Sign in</Link></>}
+          {mode === 'login' ? <>New to Ohmentum? <Link to="/signup" className="font-semibold text-volt">Create an account</Link></> : <>Already have an account? <Link to={`/login${plan ? `?plan=${plan}` : ''}`} className="font-semibold text-volt">Sign in</Link></>}
         </p>
       </div>
     </div>

@@ -23,5 +23,5 @@ export function useApi<T>(path: string | null, dep: unknown = null) {
 }
 
 export function useTitle(title: string) {
-  useEffect(() => { document.title = title ? `${title} · Phasorly` : 'Phasorly — Learn Electrical Engineering'; }, [title]);
+  useEffect(() => { document.title = title ? `${title} · Ohmentum` : 'Ohmentum — Learn Electrical Engineering'; }, [title]);
 }

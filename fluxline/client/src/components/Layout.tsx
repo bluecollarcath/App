@@ -9,12 +9,10 @@ export function Logo({ light = false }: { light?: boolean }) {
     <Link to="/" className="flex items-center gap-2.5 font-extrabold tracking-tight">
       <svg viewBox="0 0 32 32" className="h-8 w-8" aria-hidden>
         <rect width="32" height="32" rx="7" fill={light ? '#1e293b' : '#0f172a'} />
-        <circle cx="16" cy="16" r="9.5" fill="none" stroke="#f59e0b" strokeWidth="2" opacity="0.45" />
-        <line x1="16" y1="16" x2="22.2" y2="9.8" stroke="#f59e0b" strokeWidth="2.6" strokeLinecap="round" />
-        <path d="M23.9 8.1 L18.9 9.4 L22.6 13.1 Z" fill="#f59e0b" />
-        <circle cx="16" cy="16" r="2.2" fill="#f59e0b" />
+        <path d="M10.5 24.5h4v-2.2a6.6 6.6 0 1 1 5 0v2.2h4" fill="none" stroke="#f59e0b" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M3.5 12.5h3.5M2.5 16.5h3.5M3.5 20.5h3" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" opacity="0.55" />
       </svg>
-      <span className={`text-xl ${light ? 'text-white' : 'text-ink'}`}>Phasorly</span>
+      <span className={`text-xl ${light ? 'text-white' : 'text-ink'}`}>Ohmentum</span>
     </Link>
   );
 }
@@ -111,7 +109,7 @@ export default function Layout() {
             </ul>
           </div>
         </div>
-        <div className="border-t border-slate-800 py-6 text-center text-xs">© {new Date().getFullYear()} Phasorly. Phasorly is an independent learning platform and is not an accredited degree-granting institution.</div>
+        <div className="border-t border-slate-800 py-6 text-center text-xs">© {new Date().getFullYear()} Ohmentum. Ohmentum is an independent learning platform and is not an accredited degree-granting institution.</div>
       </footer>
     </div>
   );

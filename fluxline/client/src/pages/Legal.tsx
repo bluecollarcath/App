@@ -29,7 +29,7 @@ export function Terms() {
     <LegalPage title="Terms of Service">
       <p>These Terms of Service ("Terms") are an agreement between you and {who}, which runs this website and the learning service on it (the "Service"). By creating an account or using the Service, you agree to these Terms. If you don't agree, please don't use the Service.</p>
 
-      <h2>1. Who can use Phasorly</h2>
+      <h2>1. Who can use Ohmentum</h2>
       <p>You must be at least 13 years old to create an account. If you are under 18, you may use the Service only with the involvement and consent of a parent or guardian, who agrees to these Terms on your behalf. Paid subscriptions must be purchased by an adult.</p>
 
       <h2>2. Your account</h2>

@@ -1,5 +1,5 @@
 {
-  "name": "phasorly-client",
+  "name": "ohmentum-client",
   "version": "1.0.0",
   "scripts": {
     "dev": "vite",

@@ -1,4 +1,4 @@
-// In-browser stand-in for the Phasorly server, used only by the preview build (VITE_PREVIEW=1).
+// In-browser stand-in for the Ohmentum server, used only by the preview build (VITE_PREVIEW=1).
 // Mirrors server/src/index.ts. Accounts, subscription and progress live in this browser only.
 import { COURSES, STAGES, getCourse, isFreeLesson, lessonExists, totalLessons, type CourseDef } from '../../../server/src/catalog';
 import { grade, parseAssessment, PASS_PERCENT, publicQuestion } from '../../../server/src/quizParse';
@@ -26,7 +26,7 @@ const assessmentTitle = (c: CourseDef, id: string) => (id === 'final' ? `${c.cod
 interface MockUser { id: number; email: string; name: string; password: string; plan: string | null; status: string | null; periodEnd: number | null; progress: { course_slug: string; lesson_id: string; completed_at: string }[]; attempts?: { course_slug: string; assessment_id: string; percent: number }[] }
 interface Store { users: MockUser[] }
 
-const KEY = 'phasorly.preview';
+const KEY = 'ohmentum.preview';
 let memory: Store = { users: [] };
 function load(): Store { try { const s = localStorage.getItem(KEY); if (s) memory = JSON.parse(s); } catch { /* use memory */ } return memory; }
 function save(s: Store) { memory = s; try { localStorage.setItem(KEY, JSON.stringify(s)); } catch { /* memory only */ } }

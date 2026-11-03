@@ -34,7 +34,7 @@ export default function Contact() {
     <div className="mx-auto grid max-w-6xl gap-12 px-4 py-16 sm:px-6 lg:grid-cols-[1fr_1.3fr]">
       <div>
         <h1 className="text-4xl font-extrabold tracking-tight text-ink">Contact us</h1>
-        <p className="mt-4 text-lg leading-8 text-slate-600">Questions about a lesson, your subscription, or using Phasorly at your school? Send us a message and we'll reply by email, usually within two business days.</p>
+        <p className="mt-4 text-lg leading-8 text-slate-600">Questions about a lesson, your subscription, or using Ohmentum at your school? Send us a message and we'll reply by email, usually within two business days.</p>
         <div className="mt-8 space-y-4 text-sm text-slate-600">
           <div className="rounded-2xl border border-slate-200 p-5">
             <div className="font-semibold text-ink">Found a mistake in a lesson?</div>
