@@ -40,12 +40,20 @@ function runs(text: string, italicOk: boolean) {
   const out: { text: string; italic: boolean }[] = [];
   // Combining marks (e.g. the bar in Q̄) stay attached to their letter.
   const re = /([A-Za-zα-ωΑ-Ω\u0300-\u036f]+)|([^A-Za-zα-ωΑ-Ω\u0300-\u036f]+)/g;
+  // Unit groups in parentheses after a space ("(N·m)", "(rad/s)", "(kV/cm)") stay upright;
+  // groups with "=" or "," are expressions or parameters, not units.
+  const unitSpans: [number, number][] = [];
+  for (const u of text.matchAll(/(^|\s)\(([^()=,]{1,12})\)/g)) {
+    const start = (u.index ?? 0) + u[1].length + 1;
+    if (/^[A-Za-zμΩ°·/²³%\s\-0-9]+$/.test(u[2])) unitSpans.push([start, start + u[2].length]);
+  }
+  const inUnit = (i: number) => unitSpans.some(([a, b]) => i >= a && i < b);
   let m: RegExpExecArray | null;
   while ((m = re.exec(text))) {
     const before = text.slice(0, m.index);
     // A lone letter after a number or ")" and a space ("120 W", "cos(1000t) V"), or alone in
     // parentheses after a space ("t (s)"), is a unit: keep it upright.
-    const isUnit = /(\d|\))\s+$/.test(before) || (/(^|\s)\($/.test(before) && text[m.index + 1] === ')');
+    const isUnit = /(\d|\))\s+$/.test(before) || inUnit(m.index);
     if (m[1]) out.push({ text: m[1], italic: m[1].replace(/[\u0300-\u036f]/g, '').length === 1 && !/[ΩΣΔΦ]/.test(m[1]) && !isUnit });
     else out.push({ text: m[2], italic: false });
   }
