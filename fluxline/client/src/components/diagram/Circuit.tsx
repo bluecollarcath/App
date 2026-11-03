@@ -12,6 +12,7 @@
 //   GND x,y      DOT x,y      T x,y [label]   ground, junction dot, open terminal
 //   OA  x,y [flip]                   op-amp: − input (x−1, y−0.5), + input (x−1, y+0.5), output (x+1, y)
 //   NMOS / PMOS x,y [label] [mirror] gate (x−1, y), drain/source at (x, y∓1); mirror puts the gate on the right
+//   NPN / PNP x,y [label] [mirror]   base (x−1, y), collector (x, y−1), emitter (x, y+1) (PNP: emitter on top)
 //   LOOP x,y [label]                 clockwise mesh-current arrow
 //   AND/OR/NAND/NOR/XOR/XNOR x,y [n=2|3] [label]  logic gate: inputs at (x−1, y±0.4) (n=3: y−0.5, y, y+0.5), output (x+1, y)
 //   NOT/BUF x,y [label]              inverter/buffer: input (x−1, y), output (x+1, y)
@@ -117,7 +118,7 @@ export default function Circuit({ source }: { source: string }) {
     if (kind === 'W') {
       for (let i = 0; i + 1 < pts.length; i++) {
         const [a, b] = [pts[i], pts[i + 1]];
-        shapes.push(<line key={id()} x1={a[0] * U} y1={a[1] * U} x2={b[0] * U} y2={b[1] * U} stroke={INK} strokeWidth={SW} strokeLinecap="round" />);
+        shapes.push(<line key={id()} x1={a[0] * U} y1={a[1] * U} x2={b[0] * U} y2={b[1] * U} stroke={opts.color === 'anno' ? ANNO : INK} strokeWidth={SW} strokeLinecap="round" />);
         touch(a); touch(b);
       }
       if (opts.i && pts.length >= 2) {
@@ -373,6 +374,38 @@ export default function Circuit({ source }: { source: string }) {
       if (label) labels.push(<SvgLabel key={id()} text={label} x={cx} y={cy - 1.05 * U} size={13} fill="#64748b" />);
       touch([p[0] - 1, p[1] - 0.5]); touch([p[0] - 1, p[1] + 0.5]); touch([p[0] + 1, p[1]]); touch([p[0], p[1] + 1.3]);
       grow(cx - U, cy - 1.2 * U); grow(cx + U, cy + 1.3 * U);
+      continue;
+    }
+    if (kind === 'NPN' || kind === 'PNP') {
+      const [p] = pts; const x = p[0] * U, y = p[1] * U;
+      const m = words.includes('mirror') ? -1 : 1;
+      const X = (dx: number) => x + dx * U * m;
+      const pnp = kind === 'PNP';
+      const bx = X(-0.32);
+      // collector lead goes up, emitter lead goes down (for PNP the emitter is on top)
+      const topEnd: [number, number] = [X(0), y - 0.35 * U], botEnd: [number, number] = [X(0), y + 0.35 * U];
+      shapes.push(
+        <g key={id()} stroke={INK} strokeWidth={SW} fill="none">
+          <line x1={X(-1)} y1={y} x2={bx} y2={y} />
+          <line x1={bx} y1={y - 0.32 * U} x2={bx} y2={y + 0.32 * U} strokeWidth={3} />
+          <line x1={bx} y1={y - 0.14 * U} x2={topEnd[0]} y2={topEnd[1]} />
+          <line x1={bx} y1={y + 0.14 * U} x2={botEnd[0]} y2={botEnd[1]} />
+          <line x1={topEnd[0]} y1={topEnd[1]} x2={X(0)} y2={y - U} />
+          <line x1={botEnd[0]} y1={botEnd[1]} x2={X(0)} y2={y + U} />
+        </g>,
+      );
+      // emitter arrow: NPN points out of the base (down), PNP points into the base (on the top lead)
+      if (pnp) {
+        const ang = Math.atan2(y - 0.14 * U - topEnd[1], bx - topEnd[0]);
+        shapes.push(<g key={id()}>{arrowHead((bx + topEnd[0]) / 2 + 6 * Math.cos(ang), (y - 0.14 * U + topEnd[1]) / 2 + 6 * Math.sin(ang), ang, 9)}</g>);
+      } else {
+        const ang = Math.atan2(botEnd[1] - (y + 0.14 * U), botEnd[0] - bx);
+        shapes.push(<g key={id()}>{arrowHead(botEnd[0] - 2 * Math.cos(ang), botEnd[1] - 2 * Math.sin(ang), ang, 9)}</g>);
+      }
+      touch([p[0] - m, p[1]]); touch([p[0], p[1] - 1]); touch([p[0], p[1] + 1]);
+      const bLabel = words.filter((w) => w !== 'mirror').join(' ');
+      if (bLabel) labels.push(<SvgLabel key={id()} text={bLabel} x={X(0.18)} y={y} anchor={m > 0 ? 'start' : 'end'} />);
+      grow(X(0.9), y);
       continue;
     }
     if (kind === 'LOOP') {

@@ -23,8 +23,8 @@ curriculum, sequenced like an ABET-accredited B.S.E.E. degree.
 ## Content status
 
 The full catalog (every course, unit, lesson title, and topic list) is defined in
-`server/src/catalog.ts`. **69 lessons are fully written** so far: Circuit Analysis I and II, Digital Logic Design, and
-Signals & Systems are complete (each with unit quizzes and a final exam), plus the first lesson
+`server/src/catalog.ts`. **89 lessons are fully written** so far: Circuit Analysis I and II, Digital Logic Design,
+Signals & Systems, Microelectronics I, and Control Systems are complete (each with unit quizzes and a final exam), plus the first lesson
 of every other course. Lessons without
 a file show their topic outline and an "in production" notice. To publish a lesson, add
 `server/content/lessons/<course-slug>/<unit>-<lesson>.md` (e.g. `circuit-analysis-1/1-4.md`) —
