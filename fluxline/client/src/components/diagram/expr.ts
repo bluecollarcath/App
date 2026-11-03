@@ -3,6 +3,15 @@
 
 type Fn = (x: number) => number;
 
+// Complementary error function (Numerical Recipes erfcc): fractional error below 1.2e-7 everywhere,
+// so BER curves stay accurate far down the tail.
+function erfc(x: number): number {
+  const z = Math.abs(x); const t = 1 / (1 + 0.5 * z);
+  const r = t * Math.exp(-z * z - 1.26551223 + t * (1.00002368 + t * (0.37409196 + t * (0.09678418 + t * (-0.18628806
+    + t * (0.27886807 + t * (-1.13520398 + t * (1.48851587 + t * (-0.82215223 + t * 0.17087277)))))))));
+  return x >= 0 ? r : 2 - r;
+}
+
 const FUNCS: Record<string, (...a: number[]) => number> = {
   sin: Math.sin, cos: Math.cos, tan: Math.tan, asin: Math.asin, acos: Math.acos, atan: Math.atan, atan2: Math.atan2,
   sinh: Math.sinh, cosh: Math.cosh, tanh: Math.tanh,
@@ -13,6 +22,8 @@ const FUNCS: Record<string, (...a: number[]) => number> = {
   rect: (a) => (Math.abs(a) <= 0.5 ? 1 : 0),
   sinc: (a) => (a === 0 ? 1 : Math.sin(Math.PI * a) / (Math.PI * a)),
   db: (a) => 20 * Math.log10(Math.abs(a)),
+  erfc,
+  Q: (a) => 0.5 * erfc(a / Math.SQRT2), // Gaussian tail probability
 };
 const CONSTS: Record<string, number> = { pi: Math.PI, e: Math.E };
 
