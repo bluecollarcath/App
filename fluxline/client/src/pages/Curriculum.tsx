@@ -33,7 +33,7 @@ export default function Curriculum() {
         return (
           <section key={n} className="mt-14">
             <div className="flex items-baseline gap-3 border-b border-slate-200 pb-3">
-              <span className="font-mono text-sm font-semibold text-copper-dark">STAGE {n}</span>
+              <span className="font-mono text-sm font-semibold text-brand-dark">STAGE {n}</span>
               <h2 className="text-2xl font-bold text-ink">{s.name}</h2>
               <span className="hidden text-sm text-slate-500 sm:inline">— {s.blurb}</span>
             </div>

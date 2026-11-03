@@ -8,7 +8,7 @@ function LegalPage({ title, children }: { title: string; children: ReactNode }) 
   useTitle(title);
   return (
     <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6">
-      <p className="text-sm font-semibold text-copper-dark">Legal</p>
+      <p className="text-sm font-semibold text-brand-dark">Legal</p>
       <h1 className="mt-1 text-4xl font-extrabold tracking-tight text-ink">{title}</h1>
       <p className="mt-3 text-sm text-slate-500">Effective {SITE.legalEffectiveDate}</p>
       <nav className="mt-6 flex flex-wrap gap-2 text-sm">

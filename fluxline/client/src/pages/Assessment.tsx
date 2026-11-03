@@ -51,7 +51,7 @@ export default function Assessment() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-12 sm:px-6">
       <Link to={`/courses/${data.course.slug}`} className="text-sm text-slate-500 hover:text-ink">← {data.course.code} · {data.course.title}</Link>
-      <div className="mt-3 flex items-center gap-2 text-sm font-semibold text-copper-dark">
+      <div className="mt-3 flex items-center gap-2 text-sm font-semibold text-brand-dark">
         {data.kind === 'final' ? <Award size={18} /> : <ClipboardCheck size={18} />} {data.kind === 'final' ? 'Final exam' : 'Unit quiz'}
       </div>
       <h1 className="mt-1 text-3xl font-extrabold tracking-tight text-ink sm:text-4xl">{data.title}</h1>
@@ -62,7 +62,7 @@ export default function Assessment() {
 
       {data.locked ? (
         <div className="mt-8 rounded-2xl border border-slate-200 bg-gradient-to-b from-slate-50 to-white p-8 text-center">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-ink text-copper"><Lock /></div>
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-ink text-brand"><Lock /></div>
           <h2 className="mt-5 text-2xl font-bold text-ink">Quizzes and exams are for subscribers</h2>
           <p className="mx-auto mt-2 max-w-md text-slate-600">Test yourself on each unit and earn a passing score on the final exam.</p>
           <div className="mt-6 flex flex-wrap justify-center gap-3">
@@ -94,7 +94,7 @@ export default function Assessment() {
               const r = result?.results[i];
               return (
                 <li key={i} className={`rounded-2xl border p-5 sm:p-6 ${r ? (r.correct ? 'border-emerald-200 bg-emerald-50/40' : 'border-rose-200 bg-rose-50/40') : 'border-slate-200 bg-slate-50/60'}`}>
-                  <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-copper-dark">
+                  <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-brand-dark">
                     Question {i + 1}
                     {r && (r.correct ? <span className="flex items-center gap-1 text-emerald-600"><CheckCircle2 size={16} /> Correct</span> : <span className="flex items-center gap-1 text-rose-600"><XCircle size={16} /> Incorrect</span>)}
                   </div>
@@ -121,7 +121,7 @@ export default function Assessment() {
                     </div>
                   )}
                   {r && (
-                    <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-[15px] leading-7 text-slate-700">
+                    <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-[15px] leading-7 text-slate-700">
                       <div className="font-semibold text-ink">Answer: <InlineMd text={r.answer} /></div>
                       {r.explanation && <InlineMd text={r.explanation} />}
                     </div>

@@ -31,35 +31,35 @@ export default function Home() {
         </svg>
         <div className="relative mx-auto grid max-w-7xl items-center gap-12 px-4 py-20 sm:px-6 lg:grid-cols-2 lg:py-28">
           <div>
-            <span className="inline-flex items-center gap-2 rounded-full border border-amber-400/30 bg-amber-400/10 px-3 py-1 text-xs font-semibold text-amber-300">
+            <span className="inline-flex items-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-3 py-1 text-xs font-semibold text-emerald-300">
               <Zap size={14} /> A complete B.S.E.E.-level curriculum
             </span>
             <h1 className="mt-6 text-4xl font-extrabold leading-[1.1] tracking-tight sm:text-5xl lg:text-6xl">
-              Learn electrical engineering <span className="text-copper">the way universities teach it.</span>
+              Learn electrical engineering <span className="text-brand-grad">the way universities teach it.</span>
             </h1>
             <p className="mt-6 max-w-xl text-lg leading-8 text-slate-300">
               {data ? `${data.totals.courses} courses, ${data.totals.lessons} lessons` : 'Two dozen courses'} — from Kirchhoff's laws to power systems, RF, and VLSI. Rigorous derivations, worked examples, and auto-graded problems with full solutions.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
-              <Link to="/signup" className="btn-copper">Start learning free <ArrowRight size={16} /></Link>
+              <Link to="/signup" className="btn-brand">Start learning free <ArrowRight size={16} /></Link>
               <Link to="/curriculum" className="inline-flex items-center gap-2 rounded-xl border border-slate-600 px-5 py-3 text-sm font-semibold text-white hover:border-slate-400">Browse the curriculum</Link>
             </div>
             <p className="mt-4 text-sm text-slate-400">First lesson of every course free · No credit card to start</p>
           </div>
 
           {/* Sample problem card */}
-          <div className="rounded-2xl border border-slate-700 bg-slate-900/80 p-6 shadow-2xl shadow-black/40">
+          <div className="rounded-2xl border border-emerald-900/70 bg-[#0b1d15]/85 p-6 shadow-2xl shadow-black/50">
             <div className="flex items-center justify-between text-xs">
               <span className="font-mono text-slate-400">ECE 202 · Circuit Analysis II</span>
-              <span className="rounded-full bg-sky-500/15 px-2 py-0.5 font-semibold text-sky-300">Lesson 2.1</span>
+              <span className="rounded-full bg-emerald-400/15 px-2 py-0.5 font-semibold text-emerald-300">Lesson 2.1</span>
             </div>
             <h3 className="mt-3 text-lg font-bold">Sinusoids &amp; Phasors</h3>
-            <div className="mt-4 rounded-xl bg-slate-950/60 p-4 text-slate-200">
+            <div className="mt-4 rounded-xl bg-black/40 p-4 text-slate-200">
               <div className="overflow-x-auto"><InlineMd text={'$$\\mathbf{Z} = 30 + j(1000)(0.04) = 50\\angle 53.13^\\circ\\ \\Omega$$'} /></div>
               <div className="overflow-x-auto"><InlineMd text={'$$\\mathbf{I} = \\frac{100\\angle 0^\\circ}{50\\angle 53.13^\\circ} = 2\\angle{-53.13^\\circ}\\ \\text{A}$$'} /></div>
             </div>
-            <div className="mt-4 rounded-xl border border-slate-700 p-4">
-              <div className="text-xs font-semibold uppercase tracking-wider text-amber-300">Problem</div>
+            <div className="mt-4 rounded-xl border border-emerald-900/70 p-4">
+              <div className="text-xs font-semibold uppercase tracking-wider text-emerald-300">Problem</div>
               <p className="mt-1 text-sm text-slate-300">What is the reactance of a 1 µF capacitor at 1 kHz?</p>
               <div className="mt-3 flex items-center gap-2 text-sm">
                 <span className="rounded-lg border border-slate-600 bg-slate-950 px-3 py-1.5 font-mono">159.15</span>
@@ -104,7 +104,7 @@ export default function Home() {
             const I = Icon as typeof Zap;
             return (
               <div key={String(title)} className="rounded-2xl border border-slate-200 p-6">
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-100 text-copper-dark"><I size={22} /></div>
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-100 text-brand-dark"><I size={22} /></div>
                 <h3 className="mt-4 font-bold text-ink">{String(title)}</h3>
                 <p className="mt-2 text-sm leading-6 text-slate-600">{String(body)}</p>
               </div>
@@ -127,7 +127,7 @@ export default function Home() {
             <div className="mt-10 grid gap-5 md:grid-cols-2 lg:grid-cols-4">
               {Object.entries(data.stages).map(([n, s]) => (
                 <div key={n} className="rounded-2xl border border-slate-200 bg-white p-6">
-                  <div className="font-mono text-xs font-semibold text-copper-dark">STAGE {n}</div>
+                  <div className="font-mono text-xs font-semibold text-brand-dark">STAGE {n}</div>
                   <h3 className="mt-1 text-xl font-bold text-ink">{s.name}</h3>
                   <p className="mt-2 text-sm text-slate-600">{s.blurb}</p>
                   <ul className="mt-4 space-y-1.5 text-sm">
@@ -160,7 +160,7 @@ export default function Home() {
             ${PLANS.monthly.price}/month or ${PLANS.annual.price}/year — less than a single textbook. Start free; upgrade when you're ready.
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
-            <Link to="/pricing" className="btn-copper">View plans</Link>
+            <Link to="/pricing" className="btn-brand">View plans</Link>
             <Link to="/courses/circuit-analysis-1/lessons/1-1" className="inline-flex items-center gap-2 rounded-xl border border-slate-600 px-5 py-3 text-sm font-semibold hover:border-slate-400">Try a free lesson</Link>
           </div>
         </div>

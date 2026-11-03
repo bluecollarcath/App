@@ -28,7 +28,7 @@ export default function Lesson() {
       {/* Outline */}
       <aside className="hidden lg:block">
         <div className="sticky top-24 max-h-[calc(100vh-8rem)] overflow-y-auto pr-2">
-          <Link to={`/courses/${lesson.course.slug}`} className="font-mono text-xs font-semibold text-copper-dark hover:underline">{lesson.course.code}</Link>
+          <Link to={`/courses/${lesson.course.slug}`} className="font-mono text-xs font-semibold text-brand-dark hover:underline">{lesson.course.code}</Link>
           <div className="mt-1 font-bold text-ink">{lesson.course.title}</div>
           {course?.units.map((unit, ui) => (
             <div key={unit.title} className="mt-5">
@@ -68,7 +68,7 @@ export default function Lesson() {
         <div className="mt-8">
           {lesson.locked ? (
             <div className="rounded-2xl border border-slate-200 bg-gradient-to-b from-slate-50 to-white p-8 text-center">
-              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-ink text-copper"><Lock /></div>
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-ink text-brand"><Lock /></div>
               <h2 className="mt-5 text-2xl font-bold text-ink">This lesson is for subscribers</h2>
               <p className="mx-auto mt-2 max-w-md text-slate-600">
                 Unlock every lesson, worked example, and practice problem across all {course ? 'courses' : 'Ohmentum courses'}. The first lesson of every course is always free.
@@ -81,7 +81,7 @@ export default function Lesson() {
             <Markdown source={lesson.markdown} />
           ) : (
             <div className="rounded-2xl border border-dashed border-slate-300 p-8">
-              <div className="flex items-center gap-3 text-copper-dark"><Hammer size={20} /><span className="font-semibold">Full lesson in production</span></div>
+              <div className="flex items-center gap-3 text-brand-dark"><Hammer size={20} /><span className="font-semibold">Full lesson in production</span></div>
               <p className="mt-3 leading-7 text-slate-600">
                 The written lesson, worked examples, and problem set for this topic are being authored. It will cover:
               </p>

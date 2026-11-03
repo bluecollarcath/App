@@ -50,18 +50,18 @@ export default function Pricing() {
             const featured = key === 'annual';
             return (
               <div key={key} className={`relative rounded-3xl p-8 ${featured ? 'bg-ink text-white shadow-2xl shadow-slate-400/40' : 'border border-slate-200'}`}>
-                {featured && <span className="absolute -top-3 left-8 rounded-full bg-copper px-3 py-1 text-xs font-bold text-ink">Best value</span>}
+                {featured && <span className="absolute -top-3 left-8 rounded-full bg-brand-grad px-3 py-1 text-xs font-bold text-ink">Best value</span>}
                 <h2 className={`text-lg font-bold ${featured ? 'text-white' : 'text-ink'}`}>{p.label}</h2>
                 <div className="mt-4 flex items-baseline gap-1">
                   <span className="text-4xl font-extrabold">${p.price}</span>
                   <span className={featured ? 'text-slate-400' : 'text-slate-500'}>/{p.per}</span>
                 </div>
-                <p className={`mt-2 text-sm ${featured ? 'text-amber-300' : 'text-slate-500'}`}>{p.note}</p>
+                <p className={`mt-2 text-sm ${featured ? 'text-emerald-300' : 'text-slate-500'}`}>{p.note}</p>
                 <ul className={`mt-6 space-y-3 text-sm ${featured ? 'text-slate-200' : 'text-slate-700'}`}>
-                  {FEATURES.map((f) => <li key={f} className="flex gap-2"><Check size={18} className={`shrink-0 ${featured ? 'text-copper' : 'text-emerald-500'}`} />{f}</li>)}
+                  {FEATURES.map((f) => <li key={f} className="flex gap-2"><Check size={18} className={`shrink-0 ${featured ? 'text-brand' : 'text-emerald-500'}`} />{f}</li>)}
                 </ul>
                 <div className="mt-8">
-                  <SubscribeButton plan={key} className={featured ? 'btn-copper w-full' : 'btn-primary w-full'}>Subscribe {p.label.toLowerCase()}</SubscribeButton>
+                  <SubscribeButton plan={key} className={featured ? 'btn-brand w-full' : 'btn-primary w-full'}>Subscribe {p.label.toLowerCase()}</SubscribeButton>
                   <p className={`mt-3 text-xs leading-5 ${featured ? 'text-slate-400' : 'text-slate-500'}`}>
                     Renews automatically at ${p.price}/{p.per} until you cancel. Cancel anytime from your account page; you keep access through the period you've paid for.
                   </p>

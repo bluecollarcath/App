@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import { Link, NavLink, Outlet } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
 import { useAuth } from '../lib/auth';
@@ -11,17 +11,23 @@ const OMEGA = 'M5 36 H15 V30.5 A13 13 0 1 1 25 30.5 V36 H35';
  * and HMENTUM in heavy italic. `light` = for dark backgrounds (white letters).
  */
 export function Logo({ light = false, size = 26 }: { light?: boolean; size?: number }) {
+  const gid = `omega${useId().replace(/[^a-zA-Z0-9]/g, '')}`;
   return (
     <Link to="/" aria-label="Ohmentum home" className="group flex select-none items-center">
       <span className="flex items-center" style={{ gap: size * 0.1, marginRight: size * 0.2 }} aria-hidden>
         {[0.125, 0.175, 0.225].map((w, i) => (
-          <span key={i} className="block bg-copper transition group-hover:opacity-100"
-            style={{ width: size * w, height: size * 0.72, transform: 'skewX(-24deg)', opacity: [0.35, 0.6, 1][i] }} />
+          <span key={i} className="block"
+            style={{ width: size * w, height: size * 0.72, transform: 'skewX(-24deg)', opacity: [0.35, 0.6, 1][i], backgroundImage: 'linear-gradient(180deg, #b6ffdc 0%, #2fe592 55%, #0b9e5d 100%)' }} />
         ))}
       </span>
       <span className="flex items-end" style={{ fontFamily: "'Kanit', 'Inter', sans-serif", fontStyle: 'italic', fontWeight: 900, fontSize: size, lineHeight: 1, letterSpacing: '0.01em' }} aria-hidden>
         <svg viewBox="0 0 40 40" style={{ width: size * 0.93, height: size * 0.93, transform: 'skewX(-14deg)', marginRight: -1, marginBottom: size * 0.075 }}>
-          <path d={OMEGA} fill="none" stroke="#f59e0b" strokeWidth="6.5" strokeLinecap="square" />
+          <defs>
+            <linearGradient id={gid} x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stopColor="#b6ffdc" /><stop offset="0.5" stopColor="#2fe592" /><stop offset="1" stopColor="#0b9e5d" />
+            </linearGradient>
+          </defs>
+          <path d={OMEGA} fill="none" stroke={`url(#${gid})`} strokeWidth="6.5" strokeLinecap="square" />
         </svg>
         <span className={light ? 'text-white' : 'text-ink'}>HMENTUM</span>
       </span>
@@ -31,7 +37,7 @@ export function Logo({ light = false, size = 26 }: { light?: boolean; size?: num
 
 const navCls = ({ isActive }: { isActive: boolean }) =>
   `rounded-lg px-3 py-2 text-sm font-medium transition ${isActive ? 'text-white bg-white/10' : 'text-slate-300 hover:text-white hover:bg-white/5'}`;
-const ctaCls = 'inline-flex items-center justify-center rounded-xl bg-copper px-4 py-2 text-sm font-bold text-ink transition hover:bg-amber-400';
+const ctaCls = 'inline-flex items-center justify-center rounded-xl bg-brand-grad px-4 py-2 text-sm font-bold text-ink transition hover:brightness-110 hover:shadow-[0_0_18px_rgba(34,229,139,0.35)]';
 
 export default function Layout() {
   const { user, logout } = useAuth();

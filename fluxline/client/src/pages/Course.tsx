@@ -29,7 +29,7 @@ export default function Course() {
         <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6">
           <Link to="/curriculum" className="text-sm text-slate-400 hover:text-white">← Curriculum</Link>
           <div className="mt-4 flex flex-wrap items-center gap-3">
-            <span className="font-mono text-sm font-semibold text-copper">{course.code}</span>
+            <span className="font-mono text-sm font-semibold text-brand">{course.code}</span>
             <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${TRACK_COLORS[course.track]}`}>{course.track}</span>
           </div>
           <h1 className="mt-3 text-4xl font-extrabold tracking-tight sm:text-5xl">{course.title}</h1>
@@ -39,7 +39,7 @@ export default function Course() {
             <span className="flex items-center gap-1.5"><Clock size={15} /> ~{course.hours} hours</span>
             {user && <span>{pct}% complete</span>}
           </div>
-          <Link to={`/courses/${course.slug}/lessons/${firstUndone.id}`} className="btn-copper mt-8">
+          <Link to={`/courses/${course.slug}/lessons/${firstUndone.id}`} className="btn-brand mt-8">
             <PlayCircle size={18} /> {done.size ? 'Continue' : 'Start with lesson 1 — free'}
           </Link>
         </div>
@@ -82,8 +82,8 @@ export default function Course() {
                     const b = best(course.slug, id);
                     return (
                       <li>
-                        <Link to={`/courses/${course.slug}/assess/${id}`} className="flex items-center gap-3 bg-amber-50/50 px-5 py-3.5 hover:bg-amber-50">
-                          <ClipboardCheck className="shrink-0 text-copper-dark" size={20} />
+                        <Link to={`/courses/${course.slug}/assess/${id}`} className="flex items-center gap-3 bg-emerald-50/50 px-5 py-3.5 hover:bg-emerald-50">
+                          <ClipboardCheck className="shrink-0 text-brand-dark" size={20} />
                           <div className="min-w-0 flex-1">
                             <span className="font-medium text-ink">Unit {ui + 1} quiz</span>
                             <span className="ml-2 text-sm text-slate-500">{course.assessments[id]} questions</span>
@@ -100,7 +100,7 @@ export default function Course() {
               const b = best(course.slug, 'final');
               return (
                 <Link to={`/courses/${course.slug}/assess/final`} className="flex items-center gap-4 rounded-2xl bg-ink p-5 text-white hover:bg-slate-800">
-                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-copper/15 text-copper"><Award /></div>
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand/15 text-brand"><Award /></div>
                   <div className="min-w-0 flex-1">
                     <div className="font-bold">Final exam</div>
                     <div className="text-sm text-slate-400">{course.assessments.final} questions covering the whole course · 70% to pass</div>
@@ -114,7 +114,7 @@ export default function Course() {
 
         <aside className="space-y-6">
           <div className="rounded-2xl border border-slate-200 p-5">
-            <h3 className="flex items-center gap-2 font-bold text-ink"><Target size={18} className="text-copper-dark" /> Learning outcomes</h3>
+            <h3 className="flex items-center gap-2 font-bold text-ink"><Target size={18} className="text-brand-dark" /> Learning outcomes</h3>
             <ul className="mt-3 space-y-2 text-sm text-slate-600">
               {course.outcomes.map((o) => <li key={o} className="flex gap-2"><CheckCircle2 size={16} className="mt-0.5 shrink-0 text-emerald-500" />{o}</li>)}
             </ul>
@@ -131,7 +131,7 @@ export default function Course() {
             )}
           </div>
           {!user?.subscribed && (
-            <div className="rounded-2xl bg-amber-50 p-5 ring-1 ring-amber-200">
+            <div className="rounded-2xl bg-emerald-50 p-5 ring-1 ring-emerald-200">
               <h3 className="font-bold text-ink">Unlock the full course</h3>
               <p className="mt-2 text-sm text-slate-600">Lesson 1 is free. Subscribe for every lesson in every course.</p>
               <Link to="/pricing" className="btn-primary mt-4 w-full">See plans</Link>

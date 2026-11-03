@@ -4,11 +4,11 @@ import type { CourseSummary } from '../lib/api';
 
 export const TRACK_COLORS: Record<string, string> = {
   'Math & Science': 'bg-violet-100 text-violet-700',
-  'Circuits & Electronics': 'bg-amber-100 text-amber-800',
+  'Circuits & Electronics': 'bg-cyan-100 text-cyan-800',
   'Signals & Systems': 'bg-sky-100 text-sky-700',
   'Fields & Waves': 'bg-rose-100 text-rose-700',
   'Digital & Computing': 'bg-emerald-100 text-emerald-700',
-  'Power & Energy': 'bg-orange-100 text-orange-700',
+  'Power & Energy': 'bg-yellow-100 text-yellow-800',
   Professional: 'bg-slate-200 text-slate-700',
 };
 
@@ -28,7 +28,7 @@ export default function CourseCard({ course, progress }: { course: CourseSummary
       </div>
       {progress !== undefined && (
         <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-slate-100">
-          <div className="h-full rounded-full bg-copper" style={{ width: `${Math.round(progress * 100)}%` }} />
+          <div className="h-full rounded-full bg-brand" style={{ width: `${Math.round(progress * 100)}%` }} />
         </div>
       )}
     </Link>

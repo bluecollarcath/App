@@ -61,7 +61,7 @@ export default function Quiz({ source, index }: { source: string; index: number 
 
   return (
     <div className="not-prose my-6 rounded-2xl border border-slate-200 bg-slate-50/70 p-5 sm:p-6">
-      <div className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-copper-dark">
+      <div className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-brand-dark">
         Problem {index}
       </div>
       <div className="text-[16px] leading-7 text-ink"><InlineMd text={q.prompt} /></div>
@@ -98,8 +98,8 @@ export default function Quiz({ source, index }: { source: string; index: number 
       </div>
 
       {showSolution && q.explanation && (
-        <div className="mt-4 flex gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 text-[15px] leading-7 text-slate-700">
-          <Lightbulb className="mt-1 shrink-0 text-copper-dark" size={18} />
+        <div className="mt-4 flex gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-[15px] leading-7 text-slate-700">
+          <Lightbulb className="mt-1 shrink-0 text-brand-dark" size={18} />
           <div>
             {q.numeric && <div className="mb-1 font-semibold text-ink">Answer: {q.numeric.answer} {q.numeric.unit}</div>}
             <InlineMd text={q.explanation} />

@@ -27,7 +27,7 @@ export default function Dashboard() {
       <p className="mt-2 text-slate-600">{totalDone ? `You've completed ${totalDone} lesson${totalDone === 1 ? '' : 's'}${data ? ` of ${data.totals.lessons}` : ''}.` : 'Pick a course and start with its free first lesson.'}</p>
 
       {!user.subscribed && (
-        <div className="mt-6 flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-amber-50 p-5 ring-1 ring-amber-200">
+        <div className="mt-6 flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-emerald-50 p-5 ring-1 ring-emerald-200">
           <div><div className="font-semibold text-ink">You're on the free plan</div><div className="text-sm text-slate-600">Subscribe to unlock every lesson in every course.</div></div>
           <Link to="/pricing" className="btn-primary">Upgrade</Link>
         </div>
@@ -36,7 +36,7 @@ export default function Dashboard() {
       {lastCourse && (
         <Link to={`/courses/${lastCourse.slug}`} className="mt-8 flex items-center justify-between rounded-2xl bg-ink p-6 text-white hover:bg-slate-800">
           <div>
-            <div className="text-xs font-semibold uppercase tracking-wider text-copper">Continue</div>
+            <div className="text-xs font-semibold uppercase tracking-wider text-brand">Continue</div>
             <div className="mt-1 text-xl font-bold">{lastCourse.title}</div>
             <div className="text-sm text-slate-400">{byCourse[lastCourse.slug]?.size ?? 0} of {lastCourse.lessonCount} lessons complete</div>
           </div>
