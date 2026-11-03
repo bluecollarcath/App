@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react';
-import { Link, Navigate, useSearchParams } from 'react-router-dom';
+import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../lib/auth';
-import { api, PLANS } from '../lib/api';
+import { api, followRedirect, PLANS } from '../lib/api';
 import { useTitle } from '../lib/hooks';
 
 export default function Account() {
   useTitle('Account');
   const { user, loading, refresh } = useAuth();
   const [params] = useSearchParams();
+  const nav = useNavigate();
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
   const success = params.get('checkout') === 'success';
@@ -28,7 +29,8 @@ export default function Account() {
     setBusy(true); setErr('');
     try {
       const { url } = await api<{ url: string }>('/billing/portal', { body: {} });
-      window.location.href = url;
+      followRedirect(url, nav);
+      setBusy(false);
     } catch (e) { setErr((e as Error).message); setBusy(false); }
   };
 

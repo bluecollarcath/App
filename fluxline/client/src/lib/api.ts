@@ -66,7 +66,25 @@ export const tokenStore = {
   set: (t: string | null) => { try { if (t) localStorage.setItem(TOKEN_KEY, t); else localStorage.removeItem(TOKEN_KEY); } catch { /* ignore */ } },
 };
 
+/** Follow a redirect URL from the API: in-app paths use the router, everything else leaves the site. */
+export function followRedirect(url: string, navigate: (to: string) => void) {
+  if (url.startsWith('/')) navigate(url);
+  else window.location.href = url;
+}
+
+export const IS_PREVIEW = import.meta.env.VITE_PREVIEW === '1';
+
 export async function api<T>(path: string, init: { method?: string; body?: unknown } = {}): Promise<T> {
+  if (IS_PREVIEW) {
+    const { mockApi } = await import('./mockApi');
+    const method = init.method ?? (init.body !== undefined ? 'POST' : 'GET');
+    try {
+      return (await mockApi(path, method, init.body as Record<string, unknown> | undefined, tokenStore.get())) as T;
+    } catch (e) {
+      const err = e as { status?: number; message: string; body?: unknown };
+      throw new ApiError(err.status ?? 500, err.message, err.body);
+    }
+  }
   const headers: Record<string, string> = {};
   const token = tokenStore.get();
   if (token) headers.Authorization = `Bearer ${token}`;

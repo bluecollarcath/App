@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, NavLink, Outlet } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
 import { useAuth } from '../lib/auth';
+import { IS_PREVIEW } from '../lib/api';
 
 export function Logo({ light = false }: { light?: boolean }) {
   return (
@@ -32,6 +33,11 @@ export default function Layout() {
 
   return (
     <div className="flex min-h-screen flex-col">
+      {IS_PREVIEW && (
+        <div className="bg-amber-100 px-4 py-2 text-center text-xs text-amber-900">
+          Preview version: accounts and progress are saved only in this browser, and subscribing is simulated. No payment is taken.
+        </div>
+      )}
       <header className="sticky top-0 z-40 border-b border-slate-200/80 bg-white/90 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
           <div className="flex items-center gap-8">

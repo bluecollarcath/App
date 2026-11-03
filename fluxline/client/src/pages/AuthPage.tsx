@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../lib/auth';
-import { api } from '../lib/api';
+import { api, followRedirect } from '../lib/api';
 import { useTitle } from '../lib/hooks';
 import { Logo } from '../components/Layout';
 
@@ -25,7 +25,7 @@ export default function AuthPage({ mode }: { mode: 'login' | 'signup' }) {
       else await signup(name, email, password);
       if (plan === 'monthly' || plan === 'annual') {
         const { url } = await api<{ url: string }>('/billing/checkout', { body: { plan } });
-        window.location.href = url;
+        followRedirect(url, nav);
         return;
       }
       nav('/dashboard');
