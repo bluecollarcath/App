@@ -49,6 +49,34 @@ Inside a lesson, a fenced block with the language `quiz`:
 ```
 ````
 
+### Diagrams and graphs
+
+Lessons draw schematics and plots from short text blocks, so no image files are needed.
+The complete syntax is documented at the top of `client/src/components/diagram/Circuit.tsx` and
+`client/src/components/diagram/Plot.tsx`.
+
+````
+```circuit
+V 0,0 0,2 "12 V" side=-1        ← source, + at the first point; label on the left
+R 0,0 2,0 "R_1 = 6 Ω" i=i       ← resistor with a current arrow
+R 2,0 2,2 "3 Ω" v=v_o           ← resistor with polarity marks and a voltage label
+W 2,2 0,2                       ← wire
+GND 1,2
+caption: A divider. Captions may use $math$.
+```
+
+```plot
+x: 0, 5, t/τ
+y: 0, 1.1, v_C/V_s
+f: 1 - exp(-x) | charging
+mark: 1, 0.632, 63%
+```
+````
+
+Coordinates are grid units with y pointing down. Elements: `R C L V VAC I VD ID D Z SW W GND DOT T OA
+NMOS PMOS LOOP BOX SUM ARROW LINE TEXT Q`. Plot formulas support `+ − * / ^`, `sin cos tan exp ln
+log10 sqrt abs u (step) rect mod min max tanh`, and `pi`.
+
 ## Project layout
 
 ```

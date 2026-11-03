@@ -4,6 +4,8 @@ import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import type { ReactNode } from 'react';
 import Quiz from './Quiz';
+import Circuit from './diagram/Circuit';
+import Plot from './diagram/Plot';
 
 const remark = [remarkGfm, remarkMath];
 const rehype = [rehypeKatex];
@@ -27,10 +29,13 @@ export default function Markdown({ source }: { source: string }) {
         rehypePlugins={rehype}
         components={{
           pre: ({ children }) => <>{children}</>,
+          table: ({ children }) => <div className="table-wrap"><table>{children}</table></div>,
           code: ({ className, children }) => {
             const lang = /language-(\w+)/.exec(className || '')?.[1];
             const text = String(children ?? '').replace(/\n$/, '');
             if (lang === 'quiz') return <Quiz source={text} index={++quizCount} />;
+            if (lang === 'circuit') return <Circuit source={text} />;
+            if (lang === 'plot') return <Plot source={text} />;
             if (lang) return <pre><code>{text}</code></pre>;
             return <code>{children as ReactNode}</code>;
           },

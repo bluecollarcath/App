@@ -29,7 +29,9 @@ body { @apply bg-white text-slate-800 antialiased; }
 .prose-ee pre { @apply my-5 overflow-x-auto rounded-xl bg-ink p-4 text-sm leading-6 text-slate-100; }
 .prose-ee :not(pre) > code { @apply rounded bg-slate-100 px-1.5 py-0.5 font-mono text-[0.88em] text-slate-800; }
 .prose-ee .katex-display { @apply my-5 overflow-x-auto overflow-y-hidden py-1; }
-.prose-ee .katex { font-size: 1.08em; }
+.prose-ee .katex { font-size: 1.08em; position: relative; } /* contains KaTeX's hidden MathML so it can't widen the page */
+.prose-ee .table-wrap { @apply my-6 overflow-x-auto; }
+.prose-ee .table-wrap table { @apply my-0; }
 
 @utility btn-primary {
   @apply inline-flex items-center justify-center gap-2 rounded-xl bg-ink px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-700 disabled:opacity-60;
