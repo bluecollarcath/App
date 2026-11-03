@@ -5,6 +5,7 @@ import type { CourseDetail, LessonPayload } from '../lib/api';
 import { useAuth } from '../lib/auth';
 import { useProgress } from '../lib/progress';
 import Markdown from '../components/Markdown';
+import ReportError from '../components/ReportError';
 import NotFound from './NotFound';
 
 export default function Lesson() {
@@ -88,6 +89,8 @@ export default function Lesson() {
             </div>
           )}
         </div>
+
+        {!lesson.locked && lesson.markdown && <ReportError key={lesson.id} course={lesson.course.slug} lesson={lesson.id} />}
 
         {!lesson.locked && user && (
           <div className="mt-12 flex items-center justify-between rounded-2xl border border-slate-200 p-5">

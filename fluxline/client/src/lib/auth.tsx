@@ -5,7 +5,8 @@ interface AuthState {
   user: User | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  signup: (name: string, email: string, password: string) => Promise<void>;
+  signup: (name: string, email: string, password: string, acceptTerms: boolean) => Promise<void>;
+  setSession: (token: string, user: User) => void;
   logout: () => void;
   refresh: () => Promise<void>;
 }
@@ -36,14 +37,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     tokenStore.set(r.token);
     setUser(r.user);
   };
-  const signup = async (name: string, email: string, password: string) => {
-    const r = await api<{ token: string; user: User }>('/auth/signup', { body: { name, email, password } });
+  const signup = async (name: string, email: string, password: string, acceptTerms: boolean) => {
+    const r = await api<{ token: string; user: User }>('/auth/signup', { body: { name, email, password, acceptTerms } });
     tokenStore.set(r.token);
     setUser(r.user);
   };
   const logout = () => { tokenStore.set(null); setUser(null); };
+  const setSession = (token: string, u: User) => { tokenStore.set(token); setUser(u); };
 
-  return <Ctx.Provider value={{ user, loading, login, signup, logout, refresh }}>{children}</Ctx.Provider>;
+  return <Ctx.Provider value={{ user, loading, login, signup, logout, refresh, setSession }}>{children}</Ctx.Provider>;
 }
 
 export function useAuth() {

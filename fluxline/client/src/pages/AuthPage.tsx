@@ -14,6 +14,7 @@ export default function AuthPage({ mode }: { mode: 'login' | 'signup' }) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [accept, setAccept] = useState(false);
   const [err, setErr] = useState('');
   const [busy, setBusy] = useState(false);
 
@@ -22,7 +23,10 @@ export default function AuthPage({ mode }: { mode: 'login' | 'signup' }) {
     setErr(''); setBusy(true);
     try {
       if (mode === 'login') await login(email, password);
-      else await signup(name, email, password);
+      else {
+        if (!accept) { setErr('Please accept the Terms of Service and Privacy Policy to continue.'); setBusy(false); return; }
+        await signup(name, email, password, true);
+      }
       if (plan === 'monthly' || plan === 'annual') {
         const { url } = await api<{ url: string }>('/billing/checkout', { body: { plan } });
         followRedirect(url, nav);
@@ -53,9 +57,19 @@ export default function AuthPage({ mode }: { mode: 'login' | 'signup' }) {
           <label className="block text-sm font-medium text-slate-700">Email
             <input className={input} type="email" required value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" />
           </label>
-          <label className="block text-sm font-medium text-slate-700">Password
-            <input className={input} type="password" required minLength={mode === 'signup' ? 8 : undefined} value={password} onChange={(e) => setPassword(e.target.value)} autoComplete={mode === 'login' ? 'current-password' : 'new-password'} />
+          <label className="block text-sm font-medium text-slate-700">
+            <span className="flex items-center justify-between">Password
+              {mode === 'login' && <Link to="/forgot-password" className="text-xs font-semibold text-volt">Forgot password?</Link>}
+            </span>
+            <input id="password" className={input} type="password" required minLength={mode === 'signup' ? 8 : undefined} value={password} onChange={(e) => setPassword(e.target.value)} autoComplete={mode === 'login' ? 'current-password' : 'new-password'} />
+            {mode === 'signup' && <span className="mt-1 block text-xs font-normal text-slate-500">At least 8 characters.</span>}
           </label>
+          {mode === 'signup' && (
+            <label className="flex items-start gap-2.5 text-sm text-slate-600">
+              <input id="accept-terms" type="checkbox" checked={accept} onChange={(e) => setAccept(e.target.checked)} className="mt-0.5 h-4 w-4 rounded border-slate-300" />
+              <span>I agree to the <Link to="/terms" target="_blank" className="font-semibold text-volt">Terms of Service</Link> and <Link to="/privacy" target="_blank" className="font-semibold text-volt">Privacy Policy</Link>.</span>
+            </label>
+          )}
           {err && <p className="rounded-lg bg-rose-50 p-3 text-sm text-rose-700">{err}</p>}
           <button disabled={busy} className="btn-primary w-full py-2.5">{busy ? 'Please wait…' : mode === 'login' ? 'Sign in' : 'Create account'}</button>
         </form>

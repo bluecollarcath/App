@@ -10,6 +10,9 @@ import AuthPage from './pages/AuthPage';
 import Dashboard from './pages/Dashboard';
 import Account from './pages/Account';
 import NotFound from './pages/NotFound';
+import Contact from './pages/Contact';
+import { ForgotPassword, ResetPassword } from './pages/PasswordPages';
+import { Privacy, Refunds, Terms } from './pages/Legal';
 
 export default function App() {
   const { pathname } = useLocation();
@@ -27,6 +30,12 @@ export default function App() {
         <Route path="signup" element={<AuthPage mode="signup" />} />
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="account" element={<Account />} />
+        <Route path="forgot-password" element={<ForgotPassword />} />
+        <Route path="reset-password" element={<ResetPassword />} />
+        <Route path="contact" element={<Contact />} />
+        <Route path="terms" element={<Terms />} />
+        <Route path="privacy" element={<Privacy />} />
+        <Route path="refunds" element={<Refunds />} />
         <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>

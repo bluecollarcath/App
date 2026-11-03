@@ -38,6 +38,7 @@ export async function mockApi(path: string, method: string, body: Record<string,
     const email = String(body?.email ?? '').trim(); const password = String(body?.password ?? '');
     if (!/^\S+@\S+\.\S+$/.test(email)) throw new MockError(400, 'Enter a valid email.');
     if (password.length < 8) throw new MockError(400, 'Password must be at least 8 characters.');
+    if (body?.acceptTerms !== true) throw new MockError(400, 'Please accept the Terms of Service and Privacy Policy.');
     if (store.users.some((u) => u.email.toLowerCase() === email.toLowerCase())) throw new MockError(409, 'An account with that email already exists.');
     const u: MockUser = { id: Date.now(), email, name: String(body?.name ?? '').trim() || email.split('@')[0], password, plan: null, status: null, periodEnd: null, progress: [] };
     store.users.push(u); save(store);
@@ -47,6 +48,34 @@ export async function mockApi(path: string, method: string, body: Record<string,
     const u = store.users.find((x) => x.email.toLowerCase() === String(body?.email ?? '').trim().toLowerCase() && x.password === body?.password);
     if (!u) throw new MockError(401, 'Incorrect email or password.');
     return { token: String(u.id), user: pub(u) };
+  }
+  if (p === '/auth/forgot') {
+    if (!/^\S+@\S+\.\S+$/.test(String(body?.email ?? ''))) throw new MockError(400, 'Enter a valid email address.');
+    return { ok: true }; // The preview has no email; the real site sends a reset link.
+  }
+  if (p === '/auth/reset') throw new MockError(400, 'Password reset links are emailed by the live site, so they are not available in this preview.');
+  if (p === '/account/password') {
+    const u = need();
+    if (body?.current !== u.password) throw new MockError(401, 'Your current password is incorrect.');
+    if (String(body?.next ?? '').length < 8) throw new MockError(400, 'Password must be at least 8 characters.');
+    u.password = String(body?.next); save(store);
+    return { token: String(u.id), user: pub(u) };
+  }
+  if (p === '/account/delete') {
+    const u = need();
+    if (body?.password !== u.password) throw new MockError(401, 'That password is incorrect.');
+    store.users = store.users.filter((x) => x.id !== u.id); save(store);
+    return { ok: true };
+  }
+  if (p === '/config') return { supportEmail: null, billingMode: 'demo' };
+  if (p === '/contact') {
+    if (!String(body?.name ?? '').trim()) throw new MockError(400, 'Please enter your name.');
+    if (String(body?.message ?? '').trim().length < 10) throw new MockError(400, 'Please write a little more about how we can help (at least 10 characters).');
+    return { ok: true };
+  }
+  if (p === '/reports') {
+    if (String(body?.message ?? '').trim().length < 5) throw new MockError(400, 'Please describe the problem (at least 5 characters).');
+    return { ok: true };
   }
   if (p === '/me') return { user: pub(need()), billingMode: 'demo' };
   if (p === '/catalog') {

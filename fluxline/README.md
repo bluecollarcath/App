@@ -14,6 +14,11 @@ curriculum, sequenced like an ABET-accredited B.S.E.E. degree.
   locked lesson content is never sent to the browser.
 - Accounts, progress tracking, dashboard, and **Stripe** subscriptions (Checkout + Billing
   Portal + webhooks).
+- **Account security**: password reset by email, change password, delete account, sign-out
+  everywhere on password change, rate limits on sign-in/sign-up/reset, and security headers.
+- **Owner access**: emails listed in `OWNER_EMAILS` get every lesson free (for you and staff).
+- **Support & legal**: contact form, "Report an error" on every lesson (saved to the database and
+  emailed to you), and Terms of Service, Privacy Policy, and Refund Policy pages.
 
 ## Content status
 
@@ -74,6 +79,30 @@ payment so you can try the full experience. Demo billing is always off when
 3. Enable the Customer Portal in the Stripe dashboard (used by "Manage billing").
 4. The prices displayed on the site live in `client/src/lib/api.ts` (`PLANS`: $29/mo, $249/yr) —
    keep them in sync with your Stripe prices.
+
+## Going live on Render (checklist)
+
+1. **Database.** In Render, choose **New → Postgres** (a paid plan; free databases are deleted after
+   30 days). Open it, copy the **Internal Database URL**, and add it to your web service as
+   `DATABASE_URL`. Render backs up paid databases daily. Tables are created automatically on
+   first start.
+2. **Required settings** on the web service (**Environment** tab): `NODE_ENV=production`,
+   `JWT_SECRET` (any long random string), `APP_URL` (your site's address, e.g.
+   `https://fluxline.onrender.com`, no trailing slash).
+3. **Your own free access:** `OWNER_EMAILS=you@example.com` (comma-separate several). Then
+   sign up with that email right away, so nobody else can register it first.
+4. **Email** (password resets, support messages): create a free account at
+   [resend.com](https://resend.com), verify your domain, and set `RESEND_API_KEY`,
+   `EMAIL_FROM` (e.g. `Fluxline <no-reply@yourdomain.com>`), and `SUPPORT_EMAIL` (where
+   contact messages and error reports go). Without these, reset emails are only printed to the
+   server log.
+5. **Legal pages:** set `VITE_LEGAL_NAME` (e.g. `Fluxline LLC`), `VITE_GOVERNING_LAW` (e.g.
+   `the State of Texas`), and optionally `VITE_POSTAL_ADDRESS`, then redeploy. Have a lawyer
+   review the Terms, Privacy, and Refund pages (`client/src/pages/Legal.tsx`) before launch; the
+   refund window is `refundWindowDays` in `client/src/lib/site.ts`.
+6. **Stripe:** see below. Also turn on **Settings → Billing → Subscriptions and emails → Send
+   reminders about upcoming renewals**, since the Refund Policy promises annual-renewal
+   reminders.
 
 ## Deploy
 

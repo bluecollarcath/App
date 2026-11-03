@@ -1,6 +1,6 @@
 import express, { Router } from 'express';
 import Stripe from 'stripe';
-import db, { publicUser, type UserRow } from './db.js';
+import db, { findUserById, publicUser, type UserRow } from './db.js';
 import { requireAuth } from './auth.js';
 
 const stripeKey = process.env.STRIPE_SECRET_KEY;
@@ -24,7 +24,7 @@ billingRouter.post('/checkout', requireAuth, async (req, res) => {
   if (billingMode === 'demo') {
     // Local development only: grant a subscription without payment.
     const end = Math.floor(Date.now() / 1000) + (plan === 'annual' ? 365 : 30) * 86400;
-    db.prepare("UPDATE users SET sub_status='active', sub_plan=?, sub_period_end=? WHERE id=?").run(plan, end, user.id);
+    await db.run("UPDATE users SET sub_status='active', sub_plan=?, sub_period_end=? WHERE id=?", [plan, end, user.id]);
     return res.json({ url: `${APP_URL}/account?checkout=success&demo=1` });
   }
   if (!stripe) return res.status(503).json({ error: 'Billing is not configured yet.' });
@@ -35,7 +35,7 @@ billingRouter.post('/checkout', requireAuth, async (req, res) => {
   if (!customer) {
     const c = await stripe.customers.create({ email: user.email, name: user.name, metadata: { userId: String(user.id) } });
     customer = c.id;
-    db.prepare('UPDATE users SET stripe_customer_id=? WHERE id=?').run(customer, user.id);
+    await db.run('UPDATE users SET stripe_customer_id=? WHERE id=?', [customer, user.id]);
   }
   const session = await stripe.checkout.sessions.create({
     mode: 'subscription',
@@ -53,7 +53,7 @@ billingRouter.post('/checkout', requireAuth, async (req, res) => {
 billingRouter.post('/portal', requireAuth, async (req, res) => {
   const user = req.user!;
   if (billingMode === 'demo') {
-    db.prepare("UPDATE users SET sub_status='canceled' WHERE id=?").run(user.id);
+    await db.run("UPDATE users SET sub_status='canceled' WHERE id=?", [user.id]);
     return res.json({ url: `${APP_URL}/account?demo_cancel=1` });
   }
   if (!stripe || !user.stripe_customer_id) return res.status(400).json({ error: 'No billing account found.' });
@@ -61,12 +61,24 @@ billingRouter.post('/portal', requireAuth, async (req, res) => {
   res.json({ url: portal.url });
 });
 
-billingRouter.get('/status', requireAuth, (req, res) => {
-  const fresh = db.prepare('SELECT * FROM users WHERE id=?').get(req.user!.id) as UserRow;
+billingRouter.get('/status', requireAuth, async (req, res) => {
+  const fresh = (await findUserById(req.user!.id)) as UserRow;
   res.json({ mode: billingMode, user: publicUser(fresh) });
 });
 
-function applySubscription(sub: Stripe.Subscription) {
+/** Immediately cancels any live Stripe subscription (used when an account is deleted). */
+export async function cancelSubscriptionNow(user: UserRow) {
+  if (!stripe || !user.stripe_subscription_id) return;
+  if (user.sub_status === 'canceled') return;
+  try {
+    await stripe.subscriptions.cancel(user.stripe_subscription_id);
+  } catch (err) {
+    // Already canceled or missing on Stripe's side: nothing left to stop.
+    console.warn('[billing] cancel on account deletion:', (err as Error).message);
+  }
+}
+
+async function applySubscription(sub: Stripe.Subscription) {
   const customer = typeof sub.customer === 'string' ? sub.customer : sub.customer.id;
   // current_period_end lives on subscription items in recent Stripe API versions.
   const item = sub.items?.data?.[0] as (Stripe.SubscriptionItem & { current_period_end?: number }) | undefined;
@@ -74,12 +86,15 @@ function applySubscription(sub: Stripe.Subscription) {
   const interval = item?.price?.recurring?.interval;
   const plan = sub.metadata?.plan || (interval === 'year' ? 'annual' : 'monthly');
   const userId = sub.metadata?.userId;
-  const result = db
-    .prepare('UPDATE users SET stripe_subscription_id=?, sub_status=?, sub_plan=?, sub_period_end=? WHERE stripe_customer_id=?')
-    .run(sub.id, sub.status, plan, periodEnd, customer);
+  const result = await db.run(
+    'UPDATE users SET stripe_subscription_id=?, sub_status=?, sub_plan=?, sub_period_end=? WHERE stripe_customer_id=?',
+    [sub.id, sub.status, plan, periodEnd, customer],
+  );
   if (result.changes === 0 && userId) {
-    db.prepare('UPDATE users SET stripe_customer_id=?, stripe_subscription_id=?, sub_status=?, sub_plan=?, sub_period_end=? WHERE id=?')
-      .run(customer, sub.id, sub.status, plan, periodEnd, Number(userId));
+    await db.run(
+      'UPDATE users SET stripe_customer_id=?, stripe_subscription_id=?, sub_status=?, sub_plan=?, sub_period_end=? WHERE id=?',
+      [customer, sub.id, sub.status, plan, periodEnd, Number(userId)],
+    );
   }
 }
 
@@ -99,14 +114,14 @@ export const stripeWebhook = [
         const s = event.data.object;
         if (s.subscription) {
           const sub = await stripe.subscriptions.retrieve(typeof s.subscription === 'string' ? s.subscription : s.subscription.id);
-          applySubscription(sub);
+          await applySubscription(sub);
         }
         break;
       }
       case 'customer.subscription.created':
       case 'customer.subscription.updated':
       case 'customer.subscription.deleted':
-        applySubscription(event.data.object);
+        await applySubscription(event.data.object);
         break;
     }
     res.json({ received: true });

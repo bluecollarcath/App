@@ -101,7 +101,10 @@ export default function Layout() {
             <h4 className="mb-3 text-sm font-semibold text-white">Company</h4>
             <ul className="space-y-2 text-sm">
               <li><Link className="hover:text-white" to="/pricing">Pricing</Link></li>
-              <li><Link className="hover:text-white" to="/account">Account</Link></li>
+              <li><Link className="hover:text-white" to="/contact">Contact &amp; support</Link></li>
+              <li><Link className="hover:text-white" to="/terms">Terms of Service</Link></li>
+              <li><Link className="hover:text-white" to="/privacy">Privacy Policy</Link></li>
+              <li><Link className="hover:text-white" to="/refunds">Refund Policy</Link></li>
             </ul>
           </div>
         </div>

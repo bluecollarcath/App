@@ -3,6 +3,7 @@ export interface User {
   email: string;
   name: string;
   subscribed: boolean;
+  owner?: boolean;
   plan: string | null;
   status: string | null;
   periodEnd: number | null;
