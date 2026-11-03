@@ -7,7 +7,7 @@ const esc = (s) => s.replace(/\uFFFD/g, '\\uFFFD');
 const out = `<title>Ohmentum</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Kanit:ital,wght@1,900&family=JetBrains+Mono:wght@400;600&display=swap">
 <style>${css.replace(/\uFFFD/g, "\\FFFD").replace(/<\/style/gi, '<\\/style')}</style>
 <div id="root"></div>
 <script type="module">${esc(js).replace(/<\/script/gi, '<\\/script')}</script>

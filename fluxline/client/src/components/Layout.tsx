@@ -4,21 +4,34 @@ import { Menu, X } from 'lucide-react';
 import { useAuth } from '../lib/auth';
 import { IS_PREVIEW } from '../lib/api';
 
-export function Logo({ light = false }: { light?: boolean }) {
+const OMEGA = 'M5 36 H15 V30.5 A13 13 0 1 1 25 30.5 V36 H35';
+
+/**
+ * The "Full Throttle" wordmark: speed stripes, a forward-leaning Ω standing in for the O,
+ * and HMENTUM in heavy italic. `light` = for dark backgrounds (white letters).
+ */
+export function Logo({ light = false, size = 26 }: { light?: boolean; size?: number }) {
   return (
-    <Link to="/" className="flex items-center gap-2.5 font-extrabold tracking-tight">
-      <svg viewBox="0 0 32 32" className="h-8 w-8" aria-hidden>
-        <rect width="32" height="32" rx="7" fill={light ? '#1e293b' : '#0f172a'} />
-        <path d="M10.5 24.5h4v-2.2a6.6 6.6 0 1 1 5 0v2.2h4" fill="none" stroke="#f59e0b" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-        <path d="M3.5 12.5h3.5M2.5 16.5h3.5M3.5 20.5h3" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" opacity="0.55" />
-      </svg>
-      <span className={`text-xl ${light ? 'text-white' : 'text-ink'}`}>Ohmentum</span>
+    <Link to="/" aria-label="Ohmentum home" className="group flex select-none items-center">
+      <span className="flex items-center" style={{ gap: size * 0.1, marginRight: size * 0.2 }} aria-hidden>
+        {[0.125, 0.175, 0.225].map((w, i) => (
+          <span key={i} className="block bg-copper transition group-hover:opacity-100"
+            style={{ width: size * w, height: size * 0.72, transform: 'skewX(-24deg)', opacity: [0.35, 0.6, 1][i] }} />
+        ))}
+      </span>
+      <span className="flex items-end" style={{ fontFamily: "'Kanit', 'Inter', sans-serif", fontStyle: 'italic', fontWeight: 900, fontSize: size, lineHeight: 1, letterSpacing: '0.01em' }} aria-hidden>
+        <svg viewBox="0 0 40 40" style={{ width: size * 0.93, height: size * 0.93, transform: 'skewX(-14deg)', marginRight: -1, marginBottom: size * 0.075 }}>
+          <path d={OMEGA} fill="none" stroke="#f59e0b" strokeWidth="6.5" strokeLinecap="square" />
+        </svg>
+        <span className={light ? 'text-white' : 'text-ink'}>HMENTUM</span>
+      </span>
     </Link>
   );
 }
 
 const navCls = ({ isActive }: { isActive: boolean }) =>
-  `rounded-lg px-3 py-2 text-sm font-medium transition ${isActive ? 'text-ink bg-slate-100' : 'text-slate-600 hover:text-ink hover:bg-slate-50'}`;
+  `rounded-lg px-3 py-2 text-sm font-medium transition ${isActive ? 'text-white bg-white/10' : 'text-slate-300 hover:text-white hover:bg-white/5'}`;
+const ctaCls = 'inline-flex items-center justify-center rounded-xl bg-copper px-4 py-2 text-sm font-bold text-ink transition hover:bg-amber-400';
 
 export default function Layout() {
   const { user, logout } = useAuth();
@@ -39,41 +52,41 @@ export default function Layout() {
           Preview version: accounts and progress are saved only in this browser, and subscribing is simulated. No payment is taken.
         </div>
       )}
-      <header className="sticky top-0 z-40 border-b border-slate-200/80 bg-white/90 backdrop-blur">
+      <header className="sticky top-0 z-40 border-b border-slate-800 bg-ink/95 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
           <div className="flex items-center gap-8">
-            <Logo />
+            <Logo light />
             <nav className="hidden items-center gap-1 md:flex">{links}</nav>
           </div>
           <div className="hidden items-center gap-2 md:flex">
             {user ? (
               <>
                 <NavLink to="/account" className={navCls}>{user.name}</NavLink>
-                <button onClick={logout} className="rounded-lg px-3 py-2 text-sm text-slate-500 hover:text-ink">Sign out</button>
-                {!user.subscribed && <Link to="/pricing" className="btn-primary">Subscribe</Link>}
+                <button onClick={logout} className="rounded-lg px-3 py-2 text-sm text-slate-400 hover:text-white">Sign out</button>
+                {!user.subscribed && <Link to="/pricing" className={ctaCls}>Subscribe</Link>}
               </>
             ) : (
               <>
-                <Link to="/login" className="rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:text-ink">Sign in</Link>
-                <Link to="/signup" className="btn-primary">Start free</Link>
+                <Link to="/login" className="rounded-lg px-3 py-2 text-sm font-medium text-slate-300 hover:text-white">Sign in</Link>
+                <Link to="/signup" className={ctaCls}>Start free</Link>
               </>
             )}
           </div>
-          <button className="md:hidden p-2" aria-label="Menu" onClick={() => setOpen(!open)}>{open ? <X /> : <Menu />}</button>
+          <button className="p-2 text-white md:hidden" aria-label="Menu" onClick={() => setOpen(!open)}>{open ? <X /> : <Menu />}</button>
         </div>
         {open && (
-          <div className="border-t border-slate-200 bg-white px-4 py-3 md:hidden">
+          <div className="border-t border-slate-800 bg-ink px-4 py-3 md:hidden">
             <nav className="flex flex-col gap-1">
               {links}
               {user ? (
                 <>
                   <NavLink to="/account" className={navCls} onClick={() => setOpen(false)}>Account</NavLink>
-                  <button onClick={() => { logout(); setOpen(false); }} className="rounded-lg px-3 py-2 text-left text-sm text-slate-500">Sign out</button>
+                  <button onClick={() => { logout(); setOpen(false); }} className="rounded-lg px-3 py-2 text-left text-sm text-slate-400">Sign out</button>
                 </>
               ) : (
                 <>
                   <NavLink to="/login" className={navCls} onClick={() => setOpen(false)}>Sign in</NavLink>
-                  <Link to="/signup" className="btn-primary mt-2 text-center" onClick={() => setOpen(false)}>Start free</Link>
+                  <Link to="/signup" className={`${ctaCls} mt-2`} onClick={() => setOpen(false)}>Start free</Link>
                 </>
               )}
             </nav>
