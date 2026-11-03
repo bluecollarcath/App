@@ -3,9 +3,9 @@
 const env = import.meta.env;
 
 export const SITE = {
-  name: 'Fluxline',
-  /** The legal name of the business that runs the site, e.g. "Fluxline LLC". */
-  legalName: (env.VITE_LEGAL_NAME as string | undefined) || 'Fluxline',
+  name: 'Phasorly',
+  /** The legal name of the business that runs the site, e.g. "Phasorly LLC". */
+  legalName: (env.VITE_LEGAL_NAME as string | undefined) || 'Phasorly',
   /** e.g. "the State of Texas". Leave unset to use a general clause. */
   governingLaw: (env.VITE_GOVERNING_LAW as string | undefined) || '',
   /** Mailing address shown in the Privacy Policy (optional). */

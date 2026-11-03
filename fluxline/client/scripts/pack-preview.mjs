@@ -4,7 +4,7 @@ const dir = 'dist-preview/assets';
 const css = fs.readdirSync(dir).filter((f) => f.endsWith('.css')).map((f) => fs.readFileSync(`${dir}/${f}`, 'utf8')).join('\n');
 const js = fs.readdirSync(dir).filter((f) => f.endsWith('.js')).map((f) => fs.readFileSync(`${dir}/${f}`, 'utf8')).join('\n');
 const esc = (s) => s.replace(/\uFFFD/g, '\\uFFFD');
-const out = `<title>Fluxline</title>
+const out = `<title>Phasorly</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap">

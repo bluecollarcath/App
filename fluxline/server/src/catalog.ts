@@ -1,4 +1,4 @@
-// The Fluxline curriculum: a complete, college-level electrical engineering program,
+// The Phasorly curriculum: a complete, college-level electrical engineering program,
 // sequenced the way an ABET-accredited B.S.E.E. degree is. Each lesson is
 // [title, "key topic; key topic; ..."]. Lesson ids are "<unit>-<lesson>" (1-based).
 

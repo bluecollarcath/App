@@ -9,9 +9,12 @@ export function Logo({ light = false }: { light?: boolean }) {
     <Link to="/" className="flex items-center gap-2.5 font-extrabold tracking-tight">
       <svg viewBox="0 0 32 32" className="h-8 w-8" aria-hidden>
         <rect width="32" height="32" rx="7" fill={light ? '#1e293b' : '#0f172a'} />
-        <path d="M4 16h5l3-7 4 14 4-14 3 7h5" fill="none" stroke="#f59e0b" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
+        <circle cx="16" cy="16" r="9.5" fill="none" stroke="#f59e0b" strokeWidth="2" opacity="0.45" />
+        <line x1="16" y1="16" x2="22.2" y2="9.8" stroke="#f59e0b" strokeWidth="2.6" strokeLinecap="round" />
+        <path d="M23.9 8.1 L18.9 9.4 L22.6 13.1 Z" fill="#f59e0b" />
+        <circle cx="16" cy="16" r="2.2" fill="#f59e0b" />
       </svg>
-      <span className={`text-xl ${light ? 'text-white' : 'text-ink'}`}>Fluxline</span>
+      <span className={`text-xl ${light ? 'text-white' : 'text-ink'}`}>Phasorly</span>
     </Link>
   );
 }
@@ -108,7 +111,7 @@ export default function Layout() {
             </ul>
           </div>
         </div>
-        <div className="border-t border-slate-800 py-6 text-center text-xs">© {new Date().getFullYear()} Fluxline. Fluxline is an independent learning platform and is not an accredited degree-granting institution.</div>
+        <div className="border-t border-slate-800 py-6 text-center text-xs">© {new Date().getFullYear()} Phasorly. Phasorly is an independent learning platform and is not an accredited degree-granting institution.</div>
       </footer>
     </div>
   );

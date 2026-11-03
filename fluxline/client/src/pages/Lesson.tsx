@@ -71,7 +71,7 @@ export default function Lesson() {
               <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-ink text-copper"><Lock /></div>
               <h2 className="mt-5 text-2xl font-bold text-ink">This lesson is for subscribers</h2>
               <p className="mx-auto mt-2 max-w-md text-slate-600">
-                Unlock every lesson, worked example, and practice problem across all {course ? 'courses' : 'Fluxline courses'}. The first lesson of every course is always free.
+                Unlock every lesson, worked example, and practice problem across all {course ? 'courses' : 'Phasorly courses'}. The first lesson of every course is always free.
               </p>
               <div className="mt-6 flex flex-wrap justify-center gap-3">
                 {user ? <Link to="/pricing" className="btn-primary">See plans</Link> : <><Link to="/signup" className="btn-primary">Create a free account</Link><Link to="/login" className="btn-ghost">Sign in</Link></>}

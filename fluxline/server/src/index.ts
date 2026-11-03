@@ -213,7 +213,7 @@ app.post('/api/contact', limits.contact, async (req, res) => {
     void sendEmail({
       to: SUPPORT_EMAIL,
       replyTo: email,
-      subject: `[Fluxline support] ${topic} — ${name}`,
+      subject: `[Phasorly support] ${topic} — ${name}`,
       text: `From: ${name} <${email}>${req.user ? ` (account #${req.user.id}, ${isSubscribed(req.user) ? 'subscriber' : 'free'})` : ''}\nTopic: ${topic}\n\n${message}`,
     });
   }
@@ -232,7 +232,7 @@ app.post('/api/reports', limits.report, async (req, res) => {
     void sendEmail({
       to: SUPPORT_EMAIL,
       replyTo: email ?? undefined,
-      subject: `[Fluxline error report] ${course.code} lesson ${lesson.replace('-', '.')}`,
+      subject: `[Phasorly error report] ${course.code} lesson ${lesson.replace('-', '.')}`,
       text: `Lesson: ${course.title} ${lesson.replace('-', '.')}\n${APP_URL}/courses/${course.slug}/lessons/${lesson}\nFrom: ${email ?? 'anonymous'}\n\n${message}`,
     });
   }
@@ -346,4 +346,4 @@ app.use((err: Error, _req: express.Request, res: express.Response, _next: expres
 
 const port = Number(process.env.PORT || 8787);
 await migrate();
-app.listen(port, () => console.log(`Fluxline on http://localhost:${port} (db: ${db.kind}, billing: ${billingMode}, ${written.size} lessons written)`));
+app.listen(port, () => console.log(`Phasorly on http://localhost:${port} (db: ${db.kind}, billing: ${billingMode}, ${written.size} lessons written)`));

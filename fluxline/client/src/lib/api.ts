@@ -63,10 +63,11 @@ export class ApiError extends Error {
   }
 }
 
-const TOKEN_KEY = 'fluxline.token';
+const TOKEN_KEY = 'phasorly.token';
+const OLD_TOKEN_KEY = 'fluxline.token'; // keeps people signed in across the rename
 export const tokenStore = {
-  get: () => { try { return localStorage.getItem(TOKEN_KEY); } catch { return null; } },
-  set: (t: string | null) => { try { if (t) localStorage.setItem(TOKEN_KEY, t); else localStorage.removeItem(TOKEN_KEY); } catch { /* ignore */ } },
+  get: () => { try { return localStorage.getItem(TOKEN_KEY) ?? localStorage.getItem(OLD_TOKEN_KEY); } catch { return null; } },
+  set: (t: string | null) => { try { if (t) localStorage.setItem(TOKEN_KEY, t); else localStorage.removeItem(TOKEN_KEY); localStorage.removeItem(OLD_TOKEN_KEY); } catch { /* ignore */ } },
 };
 
 /** Follow a redirect URL from the API: in-app paths use the router, everything else leaves the site. */

@@ -1,4 +1,4 @@
-# Fluxline — Electrical Engineering by Subscription
+# Phasorly — Electrical Engineering by Subscription
 
 A subscription learning website that teaches a complete, college-level electrical engineering
 curriculum, sequenced like an ABET-accredited B.S.E.E. degree.
@@ -127,15 +127,15 @@ payment so you can try the full experience. Demo billing is always off when
    first start.
 2. **Required settings** on the web service (**Environment** tab): `NODE_ENV=production`,
    `JWT_SECRET` (any long random string), `APP_URL` (your site's address, e.g.
-   `https://fluxline.onrender.com`, no trailing slash).
+   `https://phasorly.onrender.com`, no trailing slash).
 3. **Your own free access:** `OWNER_EMAILS=you@example.com` (comma-separate several). Then
    sign up with that email right away, so nobody else can register it first.
 4. **Email** (password resets, support messages): create a free account at
    [resend.com](https://resend.com), verify your domain, and set `RESEND_API_KEY`,
-   `EMAIL_FROM` (e.g. `Fluxline <no-reply@yourdomain.com>`), and `SUPPORT_EMAIL` (where
+   `EMAIL_FROM` (e.g. `Phasorly <no-reply@yourdomain.com>`), and `SUPPORT_EMAIL` (where
    contact messages and error reports go). Without these, reset emails are only printed to the
    server log.
-5. **Legal pages:** set `VITE_LEGAL_NAME` (e.g. `Fluxline LLC`), `VITE_GOVERNING_LAW` (e.g.
+5. **Legal pages:** set `VITE_LEGAL_NAME` (e.g. `Phasorly LLC`), `VITE_GOVERNING_LAW` (e.g.
    `the State of Texas`), and optionally `VITE_POSTAL_ADDRESS`, then redeploy. Have a lawyer
    review the Terms, Privacy, and Refund pages (`client/src/pages/Legal.tsx`) before launch; the
    refund window is `refundWindowDays` in `client/src/lib/site.ts`.

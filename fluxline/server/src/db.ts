@@ -1,4 +1,4 @@
-// Database access for Fluxline.
+// Database access for Phasorly.
 //
 // - Production: PostgreSQL, selected by setting DATABASE_URL (e.g. a Render Postgres database).
 // - Local development: an embedded SQLite file (DATABASE_PATH, default ./data.sqlite).
@@ -137,7 +137,7 @@ export async function migrate() {
     : schema('INTEGER PRIMARY KEY AUTOINCREMENT', 'INTEGER');
   for (const s of statements) await db.run(s);
 
-  // Upgrade databases created by the first version of Fluxline.
+  // Upgrade databases created by the first version of Phasorly.
   if (db.kind === 'postgres') {
     await db.run('ALTER TABLE users ADD COLUMN IF NOT EXISTS token_version INTEGER NOT NULL DEFAULT 0');
   } else {

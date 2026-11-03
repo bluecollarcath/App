@@ -74,7 +74,7 @@ export default function Pricing() {
       <p className="mx-auto mt-10 max-w-2xl text-center text-sm leading-6 text-slate-500">
         Payments are processed securely by Stripe. Subscriptions renew automatically until cancelled. By subscribing you agree to our{' '}
         <Link to="/terms" className="underline">Terms of Service</Link> and <Link to="/refunds" className="underline">Refund Policy</Link>.
-        Fluxline is not an accredited institution and does not award academic credit or degrees.
+        Phasorly is not an accredited institution and does not award academic credit or degrees.
       </p>
     </div>
   );

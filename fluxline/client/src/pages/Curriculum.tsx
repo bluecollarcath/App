@@ -15,7 +15,7 @@ export default function Curriculum() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6">
-      <h1 className="text-4xl font-extrabold tracking-tight text-ink">The Fluxline Curriculum</h1>
+      <h1 className="text-4xl font-extrabold tracking-tight text-ink">The Phasorly Curriculum</h1>
       <p className="mt-3 max-w-3xl text-lg text-slate-600">
         A complete electrical engineering program organized into four stages, the way a university degree is sequenced. Take courses in order, or jump to what you need — prerequisites are listed on every course.
       </p>

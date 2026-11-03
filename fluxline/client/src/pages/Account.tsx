@@ -109,7 +109,7 @@ export default function Account() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-14 sm:px-6">
       <h1 className="text-3xl font-extrabold tracking-tight text-ink">Account</h1>
-      {success && <div className="mt-6 rounded-2xl bg-emerald-50 p-4 text-emerald-800 ring-1 ring-emerald-200">{user.subscribed ? 'Payment received. Welcome to Fluxline! Every course is now unlocked.' : 'Payment received. Finalizing your subscription…'}</div>}
+      {success && <div className="mt-6 rounded-2xl bg-emerald-50 p-4 text-emerald-800 ring-1 ring-emerald-200">{user.subscribed ? 'Payment received. Welcome to Phasorly! Every course is now unlocked.' : 'Payment received. Finalizing your subscription…'}</div>}
       {params.get('demo') && <div className="mt-3 rounded-2xl bg-slate-100 p-3 text-sm text-slate-600">Demo billing mode: no real payment was taken.</div>}
 
       <section className="mt-8 rounded-2xl border border-slate-200 p-6">
