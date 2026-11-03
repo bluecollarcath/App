@@ -62,13 +62,20 @@ export default function Pricing() {
                 </ul>
                 <div className="mt-8">
                   <SubscribeButton plan={key} className={featured ? 'btn-copper w-full' : 'btn-primary w-full'}>Subscribe {p.label.toLowerCase()}</SubscribeButton>
+                  <p className={`mt-3 text-xs leading-5 ${featured ? 'text-slate-400' : 'text-slate-500'}`}>
+                    Renews automatically at ${p.price}/{p.per} until you cancel. Cancel anytime from your account page; you keep access through the period you've paid for.
+                  </p>
                 </div>
               </div>
             );
           })}
         </div>
       )}
-      <p className="mt-10 text-center text-sm text-slate-500">Payments are processed securely by Stripe. Cancel anytime from your account page.</p>
+      <p className="mx-auto mt-10 max-w-2xl text-center text-sm leading-6 text-slate-500">
+        Payments are processed securely by Stripe. Subscriptions renew automatically until cancelled. By subscribing you agree to our{' '}
+        <Link to="/terms" className="underline">Terms of Service</Link> and <Link to="/refunds" className="underline">Refund Policy</Link>.
+        Fluxline is not an accredited institution and does not award academic credit or degrees.
+      </p>
     </div>
   );
 }

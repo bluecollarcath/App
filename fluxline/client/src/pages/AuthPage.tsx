@@ -24,7 +24,7 @@ export default function AuthPage({ mode }: { mode: 'login' | 'signup' }) {
     try {
       if (mode === 'login') await login(email, password);
       else {
-        if (!accept) { setErr('Please accept the Terms of Service and Privacy Policy to continue.'); setBusy(false); return; }
+        if (!accept) { setErr('Please confirm your age and accept the Terms of Service and Privacy Policy to continue.'); setBusy(false); return; }
         await signup(name, email, password, true);
       }
       if (plan === 'monthly' || plan === 'annual') {
@@ -67,7 +67,7 @@ export default function AuthPage({ mode }: { mode: 'login' | 'signup' }) {
           {mode === 'signup' && (
             <label className="flex items-start gap-2.5 text-sm text-slate-600">
               <input id="accept-terms" type="checkbox" checked={accept} onChange={(e) => setAccept(e.target.checked)} className="mt-0.5 h-4 w-4 rounded border-slate-300" />
-              <span>I agree to the <Link to="/terms" target="_blank" className="font-semibold text-volt">Terms of Service</Link> and <Link to="/privacy" target="_blank" className="font-semibold text-volt">Privacy Policy</Link>.</span>
+              <span>I'm at least 13 years old, and I agree to the <Link to="/terms" target="_blank" className="font-semibold text-volt">Terms of Service</Link> and <Link to="/privacy" target="_blank" className="font-semibold text-volt">Privacy Policy</Link>.</span>
             </label>
           )}
           {err && <p className="rounded-lg bg-rose-50 p-3 text-sm text-rose-700">{err}</p>}

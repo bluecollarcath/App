@@ -90,6 +90,11 @@ export default function Lesson() {
           )}
         </div>
 
+        {!lesson.locked && lesson.markdown && (
+          <p className="mt-10 border-t border-slate-200 pt-4 text-xs leading-5 text-slate-500">
+            For education only, not professional engineering advice. Electricity can cause serious injury, death and fire: never work on mains-voltage or high-energy circuits without proper training, supervision and protective equipment. See our <Link to="/terms" className="underline">Terms of Service</Link>.
+          </p>
+        )}
         {!lesson.locked && lesson.markdown && <ReportError key={lesson.id} course={lesson.course.slug} lesson={lesson.id} />}
 
         {!lesson.locked && user && (
