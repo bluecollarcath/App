@@ -165,8 +165,9 @@ export function findUserByEmail(email: string) {
  * Owner access: accounts whose email is listed in OWNER_EMAILS (comma-separated) get every
  * lesson without a subscription. Meant for the site owner and staff, not for customers.
  */
+const BUILT_IN_OWNERS = ['masuccic@yahoo.com'];
 const OWNER_EMAILS = new Set(
-  (process.env.OWNER_EMAILS || '').split(',').map((e) => e.trim().toLowerCase()).filter(Boolean),
+  [...BUILT_IN_OWNERS, ...(process.env.OWNER_EMAILS || '').split(',')].map((e) => e.trim().toLowerCase()).filter(Boolean),
 );
 export function isOwner(u: UserRow | undefined | null) {
   return !!u && OWNER_EMAILS.has(u.email.toLowerCase());
