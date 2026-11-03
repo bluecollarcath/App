@@ -38,7 +38,7 @@ export default function Pricing() {
         <div className="mx-auto mt-10 flex max-w-3xl flex-col items-center gap-3 rounded-2xl bg-ink px-6 py-5 text-center text-white sm:flex-row sm:text-left">
           <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand-grad text-ink"><Zap size={22} /></div>
           <div className="flex-1">
-            <div className="font-bold">Early access: 17 full courses are complete, from circuits and electronics to electromagnetics and probability, and new courses arrive every month.</div>
+            <div className="font-bold">Early access: 18 full courses are complete, from circuits and electronics to electromagnetics and probability, and new courses arrive every month.</div>
             <div className="mt-0.5 text-sm text-slate-300">Founding Members pay about half the regular price, and keep that price for life while subscribed.</div>
           </div>
           {spots != null && (
