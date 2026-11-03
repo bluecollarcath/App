@@ -8,6 +8,8 @@
 //   mark: 1, 0.632, 63.2%              dot with a label
 //   vline: 1, τ       hline: 0.632     dashed guide lines (label optional)
 //   height: 260                        drawing height in px (default 260)
+//   yticks: none                       hide y-axis numbers (timing diagrams)
+//   label: 6.4, A                       text at the left edge at height y (name a trace)
 //   caption: ...                       caption under the figure
 
 import { useId, useMemo } from 'react';
@@ -24,6 +26,7 @@ interface Stem { f: (x: number) => number; step: number; label: string; color: s
 interface Parsed {
   title: string; caption: string; height: number; x: Axis; y: Axis; series: Series[]; stems: Stem[];
   marks: { x: number; y: number; label: string }[]; vlines: { v: number; label: string }[]; hlines: { v: number; label: string }[];
+  hideY: boolean; traceLabels: { y: number; label: string }[];
 }
 
 function parseAxis(v: string, fallback: [number, number]): Axis {
@@ -66,7 +69,8 @@ export default function Plot({ source }: { source: string }) {
   const clipId = `clip${useId().replace(/[^a-zA-Z0-9]/g, '')}`;
   const parsed = useMemo((): { ok: true; p: Parsed } | { ok: false; error: string } => {
     try {
-      let title = '', caption = '', height = 260;
+      let title = '', caption = '', height = 260, hideY = false;
+      const traceLabels: { y: number; label: string }[] = [];
       let x: Axis = { min: 0, max: 1, label: '', log: false };
       let y: Axis | null = null;
       const series: Series[] = [];
@@ -85,6 +89,8 @@ export default function Plot({ source }: { source: string }) {
         if (key === 'title') title = val;
         else if (key === 'caption') caption = val;
         else if (key === 'height') height = Number(val) || 260;
+        else if (key === 'yticks') hideY = val === 'none';
+        else if (key === 'label') { const [a, ...l] = val.split(','); traceLabels.push({ y: num(a), label: l.join(',').trim() }); }
         else if (key === 'x') x = parseAxis(val, [0, 1]);
         else if (key === 'y') y = parseAxis(val, [0, 1]);
         else if (key === 'f') series.push({ f: compile(pipe[0]), label: pipe[1] ?? '', style: pipe[2] || 'solid', color: pipe[3] ? SERIES[(Number(pipe[3]) - 1) % SERIES.length] : SERIES[series.length % SERIES.length] });
@@ -105,14 +111,14 @@ export default function Plot({ source }: { source: string }) {
         const pad = (hi - lo || 1) * 0.08;
         y = { min: lo - pad, max: hi + pad, label: '', log: false };
       }
-      return { ok: true, p: { title, caption, height, x, y, series, stems, marks, vlines, hlines } };
+      return { ok: true, p: { title, caption, height, x, y, series, stems, marks, vlines, hlines, hideY, traceLabels } };
     } catch (e) {
       return { ok: false, error: (e as Error).message };
     }
   }, [source]);
 
   if (!parsed.ok) return <div className="my-6 rounded-xl bg-rose-50 p-4 font-mono text-sm text-rose-700">Plot error: {parsed.error}</div>;
-  const { title, caption, x, y, series, stems, marks, vlines, hlines } = parsed.p;
+  const { title, caption, x, y, series, stems, marks, vlines, hlines, hideY, traceLabels } = parsed.p;
   let height = parsed.p.height;
 
   const legend = [...series.filter((s) => s.label), ...stems.filter((s) => s.label)];
@@ -159,12 +165,13 @@ export default function Plot({ source }: { source: string }) {
         <defs><clipPath id={clipId}><rect x={m.l} y={m.t} width={pw} height={ph} /></clipPath></defs>
         <rect x={m.l} y={m.t} width={pw} height={ph} fill="#f8fafc" />
         {xt.map((v) => <line key={`gx${v}`} x1={sx(v)} x2={sx(v)} y1={m.t} y2={m.t + ph} stroke="#e2e8f0" />)}
-        {yt.map((v) => <line key={`gy${v}`} y1={sy(v)} y2={sy(v)} x1={m.l} x2={m.l + pw} stroke="#e2e8f0" />)}
+        {!hideY && yt.map((v) => <line key={`gy${v}`} y1={sy(v)} y2={sy(v)} x1={m.l} x2={m.l + pw} stroke="#e2e8f0" />)}
         {!y.log && y.min < 0 && y.max > 0 && <line x1={m.l} x2={m.l + pw} y1={sy(0)} y2={sy(0)} stroke="#94a3b8" />}
         {!x.log && x.min < 0 && x.max > 0 && <line y1={m.t} y2={m.t + ph} x1={sx(0)} x2={sx(0)} stroke="#94a3b8" />}
         <rect x={m.l} y={m.t} width={pw} height={ph} fill="none" stroke="#cbd5e1" />
         {xt.map((v) => <text key={`tx${v}`} x={sx(v)} y={m.t + ph + 18} textAnchor="middle" fontSize="12" fill="#64748b">{fmt(v, x.log)}</text>)}
-        {yt.map((v) => <text key={`ty${v}`} x={m.l - 8} y={sy(v)} textAnchor="end" dominantBaseline="middle" fontSize="12" fill="#64748b">{fmt(v, y.log)}</text>)}
+        {traceLabels.map((t, i) => <SvgLabel key={`tl${i}`} text={t.label} x={m.l - 10} y={sy(t.y)} anchor="end" size={14} fill="#334155" />)}
+        {!hideY && yt.map((v) => <text key={`ty${v}`} x={m.l - 8} y={sy(v)} textAnchor="end" dominantBaseline="middle" fontSize="12" fill="#64748b">{fmt(v, y.log)}</text>)}
         {x.label && <SvgLabel text={x.label} x={m.l + pw / 2} y={height - 12} size={14} fill="#334155" />}
         {y.label && <g transform={`translate(16 ${m.t + ph / 2}) rotate(-90)`}><SvgLabel text={y.label} x={0} y={0} size={14} fill="#334155" /></g>}
 

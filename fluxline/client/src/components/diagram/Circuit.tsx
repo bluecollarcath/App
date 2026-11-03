@@ -13,6 +13,12 @@
 //   OA  x,y [flip]                   op-amp: − input (x−1, y−0.5), + input (x−1, y+0.5), output (x+1, y)
 //   NMOS / PMOS x,y [label] [mirror] gate (x−1, y), drain/source at (x, y∓1); mirror puts the gate on the right
 //   LOOP x,y [label]                 clockwise mesh-current arrow
+//   AND/OR/NAND/NOR/XOR/XNOR x,y [n=2|3] [label]  logic gate: inputs at (x−1, y±0.4) (n=3: y−0.5, y, y+0.5), output (x+1, y)
+//   NOT/BUF x,y [label]              inverter/buffer: input (x−1, y), output (x+1, y)
+//   DFF x,y [label] [noqn]           D flip-flop: D (x−1.2, y−0.4), clock (x−1.2, y+0.4), Q (x+1.2, y−0.4), Q̄ (x+1.2, y+0.4)
+//   CIRCLE x,y r [dash] [color=anno]  plain circle of radius r (grid units)
+//   STATE x,y name [out] [loop=label] [accept]  state bubble (r = 0.42); loop draws a self-transition above it
+//   MUX x,y [label]                  2:1 multiplexer: in0 (x−1, y−0.5), in1 (x−1, y+0.5), select (x, y+1.3), output (x+1, y)
 //   BOX x,y w,h [label]   SUM x,y [l=+ b=− ...]   ARROW x1,y1 x2,y2 [label]   LINE x1,y1 x2,y2 [dash]
 //   TEXT x,y "label" [anchor=start|end] [size=13]     Q x,y +|− [label]   point charge
 //   caption: text under the figure
@@ -264,6 +270,109 @@ export default function Circuit({ source }: { source: string }) {
       touch([p[0] - m, p[1]]); touch([p[0], p[1] - 1]); touch([p[0], p[1] + 1]);
       if (mosLabel) labels.push(<SvgLabel key={id()} text={mosLabel} x={X(0.16)} y={y} anchor={m > 0 ? 'start' : 'end'} />);
       grow(X(0.9), y);
+      continue;
+    }
+    if (['AND', 'OR', 'NAND', 'NOR', 'XOR', 'XNOR', 'NOT', 'BUF'].includes(kind)) {
+      const [p] = pts; const cx = p[0] * U, cy = p[1] * U;
+      const single = kind === 'NOT' || kind === 'BUF';
+      const n = single ? 1 : Number(opts.n ?? 2);
+      const ins = single ? [0] : n >= 3 ? [-0.5, 0, 0.5] : [-0.4, 0.4];
+      const bw = single ? 0.8 * U : U;
+      const bh = single ? 0.8 * U : n >= 3 ? 1.25 * U : U;
+      const x0 = cx - bw / 2, x1 = cx + bw / 2, top = cy - bh / 2, bot = cy + bh / 2;
+      const orType = ['OR', 'NOR', 'XOR', 'XNOR'].includes(kind);
+      const xorType = kind === 'XOR' || kind === 'XNOR';
+      const bubble = ['NAND', 'NOR', 'XNOR', 'NOT'].includes(kind);
+      let body: string;
+      if (single) body = `M${x0},${top} L${x1},${cy} L${x0},${bot} Z`;
+      else if (orType) body = `M${x0},${top} Q${x0 + 0.22 * bw},${cy} ${x0},${bot} Q${x0 + 0.62 * bw},${bot} ${x1},${cy} Q${x0 + 0.62 * bw},${top} ${x0},${top} Z`;
+      else body = `M${x0},${top} H${x1 - bh / 2} A${bh / 2},${bh / 2} 0 0 1 ${x1 - bh / 2},${bot} H${x0} Z`;
+      const backX = (yy: number, shift = 0) => {
+        if (!orType) return x0;
+        const t = (yy - top) / (bot - top);
+        return x0 - shift + 2 * t * (1 - t) * 0.22 * bw;
+      };
+      shapes.push(
+        <g key={id()} stroke={INK} strokeWidth={SW} fill="none" strokeLinejoin="round">
+          {ins.map((dy) => {
+            const yy = cy + dy * U;
+            return <line key={dy} x1={cx - U} y1={yy} x2={backX(yy, xorType ? 9 : 0)} y2={yy} />;
+          })}
+          {xorType && <path d={`M${x0 - 9},${top} Q${x0 - 9 + 0.22 * bw},${cy} ${x0 - 9},${bot}`} />}
+          <path d={body} fill="white" />
+          {bubble && <circle cx={x1 + 5} cy={cy} r={5} fill="white" />}
+          <line x1={x1 + (bubble ? 10 : 0)} y1={cy} x2={cx + U} y2={cy} />
+        </g>,
+      );
+      ins.forEach((dy) => touch([p[0] - 1, p[1] + dy]));
+      touch([p[0] + 1, p[1]]);
+      if (label) labels.push(<SvgLabel key={id()} text={label} x={cx} y={bot + 14} size={13} fill="#64748b" />);
+      grow(cx - U, top); grow(cx + U, bot + 20);
+      continue;
+    }
+    if (kind === 'DFF') {
+      const [p] = pts; const cx = p[0] * U, cy = p[1] * U;
+      const noQn = words.includes('noqn');
+      const bx0 = cx - 0.7 * U, bx1 = cx + 0.7 * U, by0 = cy - 0.8 * U, by1 = cy + 0.8 * U;
+      const yQ = cy - 0.4 * U, yC = cy + 0.4 * U;
+      shapes.push(
+        <g key={id()} stroke={INK} strokeWidth={SW} fill="none">
+          <rect x={bx0} y={by0} width={bx1 - bx0} height={by1 - by0} rx={3} fill="white" />
+          <line x1={cx - 1.2 * U} y1={yQ} x2={bx0} y2={yQ} />
+          <line x1={cx - 1.2 * U} y1={yC} x2={bx0} y2={yC} />
+          <polyline points={`${bx0},${yC - 7} ${bx0 + 9},${yC} ${bx0},${yC + 7}`} strokeWidth={1.6} />
+          <line x1={bx1} y1={yQ} x2={cx + 1.2 * U} y2={yQ} />
+          {!noQn && <line x1={bx1} y1={yC} x2={cx + 1.2 * U} y2={yC} />}
+        </g>,
+      );
+      const t = (x: number, y: number, s: string, a: 'start' | 'end') => labels.push(<text key={id()} x={x} y={y} textAnchor={a} dominantBaseline="central" fontSize={13} fontWeight={600} fill={INK} fontFamily="Inter, sans-serif">{s}</text>);
+      t(bx0 + 6, yQ, 'D', 'start'); t(bx0 + 13, yC, 'CLK', 'start'); t(bx1 - 6, yQ, 'Q', 'end'); if (!noQn) t(bx1 - 6, yC, 'Q\u0304', 'end');
+      touch([p[0] - 1.2, p[1] - 0.4]); touch([p[0] - 1.2, p[1] + 0.4]); touch([p[0] + 1.2, p[1] - 0.4]); if (!noQn) touch([p[0] + 1.2, p[1] + 0.4]);
+      const ffLabel = words.filter((w) => w !== 'noqn').join(' ');
+      if (ffLabel) labels.push(<SvgLabel key={id()} text={ffLabel} x={cx} y={by0 - 12} size={13} fill="#64748b" />);
+      grow(cx - 1.2 * U, by0 - 22); grow(cx + 1.2 * U, by1);
+      continue;
+    }
+    if (kind === 'CIRCLE') {
+      const [p] = pts; const r = Number(words.find((w) => /^[\d.]+$/.test(w)) ?? 1) * U;
+      shapes.push(<circle key={id()} cx={p[0] * U} cy={p[1] * U} r={r} fill="none" stroke={opts.color === 'anno' ? ANNO : INK} strokeWidth={1.6} strokeDasharray={words.includes('dash') ? '6 5' : undefined} />);
+      grow(p[0] * U - r, p[1] * U - r); grow(p[0] * U + r, p[1] * U + r);
+      continue;
+    }
+    if (kind === 'STATE') {
+      const [p] = pts; const cx = p[0] * U, cy = p[1] * U; const r = 0.42 * U;
+      const [name, out] = words;
+      shapes.push(<circle key={id()} cx={cx} cy={cy} r={r} fill="white" stroke={INK} strokeWidth={SW} />);
+      if (words.includes('accept') || opts.accept) shapes.push(<circle key={id()} cx={cx} cy={cy} r={r - 5} fill="none" stroke={INK} strokeWidth={1.4} />);
+      labels.push(<SvgLabel key={id()} text={name ?? ''} x={cx} y={out && out !== 'accept' ? cy - 7 : cy} size={15} />);
+      if (out && out !== 'accept') labels.push(<SvgLabel key={id()} text={out} x={cx} y={cy + 10} size={12} fill={ANNO} />);
+      if (opts.loop) {
+        const a0 = -Math.PI * 0.72, a1 = -Math.PI * 0.28;
+        const sx = cx + r * Math.cos(a0), sy = cy + r * Math.sin(a0), ex = cx + r * Math.cos(a1), ey = cy + r * Math.sin(a1);
+        shapes.push(<path key={id()} d={`M${sx},${sy} C${cx - r * 1.1},${cy - r * 2.5} ${cx + r * 1.1},${cy - r * 2.5} ${ex},${ey}`} fill="none" stroke={INK} strokeWidth={1.8} />);
+        shapes.push(<g key={id()}>{arrowHead(ex, ey, Math.atan2(ey - (cy - r * 2.1), ex - (cx + r * 0.9)), 9)}</g>);
+        labels.push(<SvgLabel key={id()} text={opts.loop} x={cx} y={cy - r * 2.62} size={13} fill={ANNO} />);
+        grow(cx, cy - r * 3);
+      }
+      grow(cx - r, cy - r); grow(cx + r, cy + r);
+      continue;
+    }
+    if (kind === 'MUX') {
+      const [p] = pts; const cx = p[0] * U, cy = p[1] * U;
+      const lx = cx - 0.5 * U, rx = cx + 0.5 * U;
+      shapes.push(
+        <g key={id()} stroke={INK} strokeWidth={SW} fill="none">
+          <polygon points={`${lx},${cy - 0.9 * U} ${rx},${cy - 0.5 * U} ${rx},${cy + 0.5 * U} ${lx},${cy + 0.9 * U}`} fill="white" strokeLinejoin="round" />
+          <line x1={cx - U} y1={cy - 0.5 * U} x2={lx} y2={cy - 0.5 * U} />
+          <line x1={cx - U} y1={cy + 0.5 * U} x2={lx} y2={cy + 0.5 * U} />
+          <line x1={rx} y1={cy} x2={cx + U} y2={cy} />
+          <line x1={cx} y1={cy + 0.7 * U} x2={cx} y2={cy + 1.3 * U} />
+        </g>,
+      );
+      for (const [s2, dy] of [['0', -0.5], ['1', 0.5]] as const) labels.push(<text key={id()} x={lx + 8} y={cy + dy * U} dominantBaseline="central" fontSize={12} fontWeight={600} fill={INK} fontFamily="Inter, sans-serif">{s2}</text>);
+      if (label) labels.push(<SvgLabel key={id()} text={label} x={cx} y={cy - 1.05 * U} size={13} fill="#64748b" />);
+      touch([p[0] - 1, p[1] - 0.5]); touch([p[0] - 1, p[1] + 0.5]); touch([p[0] + 1, p[1]]); touch([p[0], p[1] + 1.3]);
+      grow(cx - U, cy - 1.2 * U); grow(cx + U, cy + 1.3 * U);
       continue;
     }
     if (kind === 'LOOP') {

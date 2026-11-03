@@ -38,14 +38,15 @@ function parse(s: string): Seg[] {
 function runs(text: string, italicOk: boolean) {
   if (!italicOk) return [{ text, italic: false }];
   const out: { text: string; italic: boolean }[] = [];
-  const re = /([A-Za-zα-ωΑ-Ω]+)|([^A-Za-zα-ωΑ-Ω]+)/g;
+  // Combining marks (e.g. the bar in Q̄) stay attached to their letter.
+  const re = /([A-Za-zα-ωΑ-Ω\u0300-\u036f]+)|([^A-Za-zα-ωΑ-Ω\u0300-\u036f]+)/g;
   let m: RegExpExecArray | null;
   while ((m = re.exec(text))) {
     const before = text.slice(0, m.index);
     // A lone letter after a number or ")" and a space ("120 W", "cos(1000t) V"), or alone in
     // parentheses after a space ("t (s)"), is a unit: keep it upright.
     const isUnit = /(\d|\))\s+$/.test(before) || (/(^|\s)\($/.test(before) && text[m.index + 1] === ')');
-    if (m[1]) out.push({ text: m[1], italic: m[1].length === 1 && !/[ΩΣΔΦ]/.test(m[1]) && !isUnit });
+    if (m[1]) out.push({ text: m[1], italic: m[1].replace(/[\u0300-\u036f]/g, '').length === 1 && !/[ΩΣΔΦ]/.test(m[1]) && !isUnit });
     else out.push({ text: m[2], italic: false });
   }
   return out;
