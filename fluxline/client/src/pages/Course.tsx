@@ -1,5 +1,5 @@
 import { Link, useParams } from 'react-router-dom';
-import { CheckCircle2, Circle, Clock, Lock, PlayCircle, Target } from 'lucide-react';
+import { Award, CheckCircle2, Circle, ClipboardCheck, Clock, Lock, PlayCircle, Target } from 'lucide-react';
 import { useApi, useTitle } from '../lib/hooks';
 import type { Catalog, CourseDetail } from '../lib/api';
 import { useAuth } from '../lib/auth';
@@ -12,7 +12,7 @@ export default function Course() {
   const { data: course, error, loading } = useApi<CourseDetail>(`/courses/${slug}`);
   const { data: catalog } = useApi<Catalog>('/catalog');
   const { user } = useAuth();
-  const { byCourse } = useProgress(!!user);
+  const { byCourse, best } = useProgress(!!user);
   useTitle(course?.title ?? '');
 
   if (error?.status === 404) return <NotFound />;
@@ -77,9 +77,38 @@ export default function Course() {
                       </li>
                     );
                   })}
+                  {course.assessments?.[`unit-${ui + 1}`] && (() => {
+                    const id = `unit-${ui + 1}`;
+                    const b = best(course.slug, id);
+                    return (
+                      <li>
+                        <Link to={`/courses/${course.slug}/assess/${id}`} className="flex items-center gap-3 bg-amber-50/50 px-5 py-3.5 hover:bg-amber-50">
+                          <ClipboardCheck className="shrink-0 text-copper-dark" size={20} />
+                          <div className="min-w-0 flex-1">
+                            <span className="font-medium text-ink">Unit {ui + 1} quiz</span>
+                            <span className="ml-2 text-sm text-slate-500">{course.assessments[id]} questions</span>
+                          </div>
+                          {b ? <ScoreBadge percent={b.best} /> : !user?.subscribed && <Lock className="shrink-0 text-slate-400" size={16} />}
+                        </Link>
+                      </li>
+                    );
+                  })()}
                 </ul>
               </div>
             ))}
+            {course.assessments?.final && (() => {
+              const b = best(course.slug, 'final');
+              return (
+                <Link to={`/courses/${course.slug}/assess/final`} className="flex items-center gap-4 rounded-2xl bg-ink p-5 text-white hover:bg-slate-800">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-copper/15 text-copper"><Award /></div>
+                  <div className="min-w-0 flex-1">
+                    <div className="font-bold">Final exam</div>
+                    <div className="text-sm text-slate-400">{course.assessments.final} questions covering the whole course · 70% to pass</div>
+                  </div>
+                  {b ? <ScoreBadge percent={b.best} dark /> : !user?.subscribed && <Lock className="shrink-0 text-slate-500" size={16} />}
+                </Link>
+              );
+            })()}
           </div>
         </div>
 
@@ -111,5 +140,14 @@ export default function Course() {
         </aside>
       </div>
     </>
+  );
+}
+
+function ScoreBadge({ percent, dark = false }: { percent: number; dark?: boolean }) {
+  const passed = percent >= 70;
+  return (
+    <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold ${passed ? 'bg-emerald-100 text-emerald-700' : dark ? 'bg-amber-200 text-amber-900' : 'bg-amber-100 text-amber-800'}`}>
+      {passed ? 'Passed' : 'Best'} {percent}%
+    </span>
   );
 }

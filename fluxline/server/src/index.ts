@@ -13,6 +13,8 @@ import { optionalAuth, PASSWORD_RULE, requireAuth, signToken, validPassword } fr
 import { billingMode, billingRouter, cancelSubscriptionNow, stripeWebhook } from './billing.js';
 import { COURSES, STAGES, getCourse, isFreeLesson, lessonExists, totalLessons } from './catalog.js';
 import { passwordChangedEmail, resetEmail, sendEmail, SUPPORT_EMAIL } from './email.js';
+import { assessmentIds, assessmentIndex, assessmentTitle, loadAssessment } from './assessments.js';
+import { grade, PASS_PERCENT, publicQuestion } from './quizParse.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const CONTENT_DIR = path.resolve(here, '../content/lessons');
@@ -35,6 +37,8 @@ for (const c of COURSES) {
   );
 }
 
+const assessmentsByCourse = new Map(COURSES.map((c) => [c.slug, assessmentIndex(c)]));
+
 function courseSummary(slug: string) {
   const c = getCourse(slug)!;
   return {
@@ -47,6 +51,7 @@ function courseDetail(slug: string) {
   return {
     ...courseSummary(slug),
     outcomes: c.outcomes,
+    assessments: assessmentsByCourse.get(slug) ?? {},
     units: c.units.map((u, ui) => ({
       title: u.title,
       lessons: u.lessons.map(([title, topics], li) => {
@@ -185,6 +190,7 @@ app.post('/api/account/delete', requireAuth, limits.password, async (req, res) =
   await db.run('UPDATE error_reports SET user_id = NULL, email = NULL WHERE user_id = ?', [user.id]);
   await db.run('UPDATE contact_messages SET user_id = NULL WHERE user_id = ?', [user.id]);
   await db.run('DELETE FROM progress WHERE user_id = ?', [user.id]);
+  await db.run('DELETE FROM assessment_attempts WHERE user_id = ?', [user.id]);
   await db.run('DELETE FROM password_resets WHERE user_id = ?', [user.id]);
   await db.run('DELETE FROM users WHERE id = ?', [user.id]);
   res.json({ ok: true });
@@ -267,10 +273,52 @@ app.get('/api/courses/:slug/lessons/:id', (req, res) => {
   res.json({ ...meta, locked: false, markdown });
 });
 
+// ── Quizzes & exams ───────────────────────────────────
+interface AttemptSummary { course_slug: string; assessment_id: string; best: number; attempts: number }
+async function attemptSummaries(userId: number, course?: string) {
+  return db.all<AttemptSummary>(
+    `SELECT course_slug, assessment_id, MAX(percent) AS best, COUNT(*) AS attempts FROM assessment_attempts
+     WHERE user_id = ?${course ? ' AND course_slug = ?' : ''} GROUP BY course_slug, assessment_id`,
+    course ? [userId, course] : [userId],
+  );
+}
+
+app.get('/api/courses/:slug/assessments/:aid', async (req, res) => {
+  const course = getCourse(req.params.slug);
+  const aid = req.params.aid;
+  const a = course && loadAssessment(course, aid);
+  if (!course || !a) return res.status(404).json({ error: 'Assessment not found.' });
+  const meta = {
+    course: { slug: course.slug, code: course.code, title: course.title },
+    id: aid, kind: aid === 'final' ? 'final' : 'unit', title: assessmentTitle(course, aid),
+    questionCount: a.questions.length, passPercent: PASS_PERCENT,
+  };
+  if (!isSubscribed(req.user)) return res.status(req.user ? 402 : 401).json({ ...meta, locked: true, error: 'Subscribe to take quizzes and exams.' });
+  const mine = (await attemptSummaries(req.user!.id, course.slug)).find((r) => r.assessment_id === aid);
+  res.json({ ...meta, locked: false, intro: a.intro, questions: a.questions.map(publicQuestion), best: mine ? Number(mine.best) : null, attempts: mine ? Number(mine.attempts) : 0 });
+});
+
+app.post('/api/courses/:slug/assessments/:aid/submit', requireAuth, async (req, res) => {
+  const course = getCourse(String(req.params.slug));
+  const aid = String(req.params.aid);
+  const a = course && loadAssessment(course, aid);
+  if (!course || !a) return res.status(404).json({ error: 'Assessment not found.' });
+  if (!isSubscribed(req.user)) return res.status(402).json({ error: 'Subscribe to take quizzes and exams.' });
+  const answers = Array.isArray(req.body?.answers) ? req.body.answers.slice(0, a.questions.length).map((v: unknown) => (typeof v === 'number' || typeof v === 'string' ? (typeof v === 'string' ? v.slice(0, 60) : v) : null)) : [];
+  const result = grade(a.questions, answers);
+  await db.run(
+    'INSERT INTO assessment_attempts (user_id, course_slug, assessment_id, score, total, percent, answers, created_at) VALUES (?,?,?,?,?,?,?,?)',
+    [req.user!.id, course.slug, aid, result.score, result.total, result.percent, JSON.stringify(answers), now()],
+  );
+  const mine = (await attemptSummaries(req.user!.id, course.slug)).find((r) => r.assessment_id === aid);
+  res.json({ ...result, best: Number(mine?.best ?? result.percent), attempts: Number(mine?.attempts ?? 1) });
+});
+
 // ── Progress ──────────────────────────────────────────
 app.get('/api/progress', requireAuth, async (req, res) => {
   const rows = await db.all('SELECT course_slug, lesson_id, completed_at FROM progress WHERE user_id=? ORDER BY completed_at DESC', [req.user!.id]);
-  res.json({ completed: rows });
+  const assessments = (await attemptSummaries(req.user!.id)).map((r) => ({ ...r, best: Number(r.best), attempts: Number(r.attempts) }));
+  res.json({ completed: rows, assessments });
 });
 
 app.post('/api/progress', requireAuth, async (req, res) => {

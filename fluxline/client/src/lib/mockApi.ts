@@ -1,6 +1,7 @@
 // In-browser stand-in for the Fluxline server, used only by the preview build (VITE_PREVIEW=1).
 // Mirrors server/src/index.ts. Accounts, subscription and progress live in this browser only.
-import { COURSES, STAGES, getCourse, isFreeLesson, lessonExists, totalLessons } from '../../../server/src/catalog';
+import { COURSES, STAGES, getCourse, isFreeLesson, lessonExists, totalLessons, type CourseDef } from '../../../server/src/catalog';
+import { grade, parseAssessment, PASS_PERCENT, publicQuestion } from '../../../server/src/quizParse';
 
 const files = import.meta.glob('../../../server/content/lessons/**/*.md', { query: '?raw', import: 'default', eager: true }) as Record<string, string>;
 const lessons: Record<string, string> = {};
@@ -9,7 +10,20 @@ for (const [p, text] of Object.entries(files)) {
   if (m) lessons[`${m[1]}/${m[2]}`] = text;
 }
 
-interface MockUser { id: number; email: string; name: string; password: string; plan: string | null; status: string | null; periodEnd: number | null; progress: { course_slug: string; lesson_id: string; completed_at: string }[] }
+const assessFiles = import.meta.glob('../../../server/content/assessments/**/*.md', { query: '?raw', import: 'default', eager: true }) as Record<string, string>;
+const assessments: Record<string, ReturnType<typeof parseAssessment>> = {};
+for (const [p, text] of Object.entries(assessFiles)) {
+  const m = /assessments\/([^/]+)\/([^/]+)\.md$/.exec(p);
+  if (m) assessments[`${m[1]}/${m[2]}`] = parseAssessment(text);
+}
+function assessmentIndex(c: CourseDef) {
+  const out: Record<string, number> = {};
+  for (const id of [...c.units.map((_, i) => `unit-${i + 1}`), 'final']) if (assessments[`${c.slug}/${id}`]) out[id] = assessments[`${c.slug}/${id}`].questions.length;
+  return out;
+}
+const assessmentTitle = (c: CourseDef, id: string) => (id === 'final' ? `${c.code} Final Exam` : `Unit ${id.slice(5)} Quiz: ${c.units[Number(id.slice(5)) - 1]?.title ?? ''}`);
+
+interface MockUser { id: number; email: string; name: string; password: string; plan: string | null; status: string | null; periodEnd: number | null; progress: { course_slug: string; lesson_id: string; completed_at: string }[]; attempts?: { course_slug: string; assessment_id: string; percent: number }[] }
 interface Store { users: MockUser[] }
 
 const KEY = 'fluxline.preview';
@@ -83,7 +97,7 @@ export async function mockApi(path: string, method: string, body: Record<string,
   }
   if ((m = /^\/courses\/([^/]+)$/.exec(p))) {
     const c = getCourse(m[1]); if (!c) throw new MockError(404, 'Course not found.');
-    return { ...summary(c.slug), outcomes: c.outcomes, units: c.units.map((u, ui) => ({ title: u.title, lessons: u.lessons.map(([title, topics], li) => { const id = `${ui + 1}-${li + 1}`; return { id, title, topics: topics.split(';').map((t) => t.trim()), free: isFreeLesson(id), written: !!lessons[`${c.slug}/${id}`] }; }) })) };
+    return { ...summary(c.slug), outcomes: c.outcomes, assessments: assessmentIndex(c), units: c.units.map((u, ui) => ({ title: u.title, lessons: u.lessons.map(([title, topics], li) => { const id = `${ui + 1}-${li + 1}`; return { id, title, topics: topics.split(';').map((t) => t.trim()), free: isFreeLesson(id), written: !!lessons[`${c.slug}/${id}`] }; }) })) };
   }
   if ((m = /^\/courses\/([^/]+)\/lessons\/([^/]+)$/.exec(p))) {
     const c = getCourse(m[1]); const found = c && lessonExists(c, m[2]);
@@ -95,7 +109,28 @@ export async function mockApi(path: string, method: string, body: Record<string,
     if (!isFreeLesson(id) && user?.status !== 'active') { const b = { ...meta, locked: true, error: 'Subscribe to unlock this lesson.' }; throw new MockError(user ? 402 : 401, b.error, b); }
     return { ...meta, locked: false, markdown: lessons[`${c.slug}/${id}`] ?? null };
   }
-  if (p === '/progress' && method === 'GET') return { completed: [...need().progress].reverse() };
+  if ((m = /^\/courses\/([^/]+)\/assessments\/([^/]+)(\/submit)?$/.exec(p))) {
+    const c = getCourse(m[1]); const a = c && assessments[`${c.slug}/${m[2]}`];
+    if (!c || !a) throw new MockError(404, 'Assessment not found.');
+    const id = m[2];
+    const summarize = (u: MockUser) => { const mine = (u.attempts ?? []).filter((x) => x.course_slug === c.slug && x.assessment_id === id); return { best: mine.length ? Math.max(...mine.map((x) => x.percent)) : null, attempts: mine.length }; };
+    const meta = { course: { slug: c.slug, code: c.code, title: c.title }, id, kind: id === 'final' ? 'final' : 'unit', title: assessmentTitle(c, id), questionCount: a.questions.length, passPercent: PASS_PERCENT };
+    if (user?.status !== 'active') { const b = { ...meta, locked: true, error: 'Subscribe to take quizzes and exams.' }; throw new MockError(user ? 402 : 401, b.error, b); }
+    if (!m[3]) return { ...meta, locked: false, intro: a.intro, questions: a.questions.map(publicQuestion), ...summarize(user) };
+    const result = grade(a.questions, Array.isArray(body?.answers) ? body!.answers as unknown[] : []);
+    (user.attempts ??= []).push({ course_slug: c.slug, assessment_id: id, percent: result.percent }); save(store);
+    const s = summarize(user);
+    return { ...result, best: s.best, attempts: s.attempts };
+  }
+  if (p === '/progress' && method === 'GET') {
+    const u = need();
+    const groups = new Map<string, { course_slug: string; assessment_id: string; best: number; attempts: number }>();
+    for (const x of u.attempts ?? []) {
+      const k = `${x.course_slug}/${x.assessment_id}`; const g = groups.get(k) ?? { course_slug: x.course_slug, assessment_id: x.assessment_id, best: 0, attempts: 0 };
+      g.best = Math.max(g.best, x.percent); g.attempts++; groups.set(k, g);
+    }
+    return { completed: [...u.progress].reverse(), assessments: [...groups.values()] };
+  }
   if (p === '/progress') {
     const u = need(); const { course, lesson, completed } = body ?? {};
     u.progress = u.progress.filter((r) => !(r.course_slug === course && r.lesson_id === lesson));

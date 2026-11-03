@@ -33,6 +33,8 @@ export interface LessonRef {
 
 export interface CourseDetail extends CourseSummary {
   outcomes: string[];
+  /** Question counts for the quizzes/exam this course has, keyed by "unit-<n>" or "final". */
+  assessments: Record<string, number>;
   units: { title: string; lessons: LessonRef[] }[];
 }
 

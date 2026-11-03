@@ -23,8 +23,8 @@ curriculum, sequenced like an ABET-accredited B.S.E.E. degree.
 ## Content status
 
 The full catalog (every course, unit, lesson title, and topic list) is defined in
-`server/src/catalog.ts`. **33 lessons are fully written** so far: the first lesson of every
-course, eight lessons of Circuit Analysis I, and two more in Circuit Analysis II. Lessons without
+`server/src/catalog.ts`. **50 lessons are fully written** so far: Circuit Analysis I and II are complete (with unit
+quizzes and final exams), plus the first lesson of every other course. Lessons without
 a file show their topic outline and an "in production" notice. To publish a lesson, add
 `server/content/lessons/<course-slug>/<unit>-<lesson>.md` (e.g. `circuit-analysis-1/1-4.md`) —
 it's picked up on the next server start.
@@ -48,6 +48,17 @@ Inside a lesson, a fenced block with the language `quiz`:
 > Explanation.
 ```
 ````
+
+### Unit quizzes and final exams
+
+Each course can have a quiz per unit and a final exam:
+`server/content/assessments/<course-slug>/unit-<n>.md` and `final.md`. They use the same
+`quiz` block format as lesson problems, with optional intro text at the top. Unlike lesson
+practice, assessments are **graded on the server**: questions are sent without answers, a
+student submits once, and only then sees the score, the correct answers, and explanations.
+Scores are saved (best score and attempt count are shown on the course page), 70% passes, and
+quizzes are for subscribers and owner accounts. Quiz files are loaded when the server starts,
+so restart (redeploy) after adding one.
 
 ### Diagrams and graphs
 

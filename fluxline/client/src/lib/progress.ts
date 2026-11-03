@@ -2,12 +2,16 @@ import { useCallback, useEffect, useState } from 'react';
 import { api } from './api';
 
 export interface ProgressRow { course_slug: string; lesson_id: string; completed_at: string }
+export interface AttemptRow { course_slug: string; assessment_id: string; best: number; attempts: number }
 
 export function useProgress(enabled: boolean) {
   const [rows, setRows] = useState<ProgressRow[]>([]);
+  const [attempts, setAttempts] = useState<AttemptRow[]>([]);
   const load = useCallback(() => {
-    if (!enabled) { setRows([]); return; }
-    api<{ completed: ProgressRow[] }>('/progress').then((r) => setRows(r.completed)).catch(() => setRows([]));
+    if (!enabled) { setRows([]); setAttempts([]); return; }
+    api<{ completed: ProgressRow[]; assessments?: AttemptRow[] }>('/progress')
+      .then((r) => { setRows(r.completed); setAttempts(r.assessments ?? []); })
+      .catch(() => { setRows([]); setAttempts([]); });
   }, [enabled]);
   useEffect(load, [load]);
 
@@ -18,5 +22,6 @@ export function useProgress(enabled: boolean) {
     await api('/progress', { body: { course, lesson, completed } });
     load();
   };
-  return { rows, byCourse, toggle, reload: load };
+  const best = (course: string, id: string) => attempts.find((a) => a.course_slug === course && a.assessment_id === id);
+  return { rows, byCourse, attempts, best, toggle, reload: load };
 }

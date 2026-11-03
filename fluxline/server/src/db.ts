@@ -54,6 +54,18 @@ function schema(idCol: string, bigint: string) {
       created_at TEXT NOT NULL,
       resolved INTEGER NOT NULL DEFAULT 0
     )`,
+    `CREATE TABLE IF NOT EXISTS assessment_attempts (
+      id ${idCol},
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      course_slug TEXT NOT NULL,
+      assessment_id TEXT NOT NULL,
+      score INTEGER NOT NULL,
+      total INTEGER NOT NULL,
+      percent INTEGER NOT NULL,
+      answers TEXT NOT NULL,
+      created_at TEXT NOT NULL
+    )`,
+    `CREATE INDEX IF NOT EXISTS assessment_attempts_user ON assessment_attempts (user_id, course_slug)`,
     `CREATE TABLE IF NOT EXISTS contact_messages (
       id ${idCol},
       name TEXT NOT NULL,
