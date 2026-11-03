@@ -10,7 +10,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import db, { findUserByEmail, findUserById, isSubscribed, migrate, now, publicUser, type UserRow } from './db.js';
 import { optionalAuth, PASSWORD_RULE, requireAuth, signToken, validPassword } from './auth.js';
-import { billingMode, billingRouter, cancelSubscriptionNow, stripeWebhook } from './billing.js';
+import { billingMode, billingRouter, cancelSubscriptionNow, foundingStatus, stripeWebhook } from './billing.js';
 import { COURSES, STAGES, getCourse, isFreeLesson, lessonExists, totalLessons } from './catalog.js';
 import { passwordChangedEmail, resetEmail, sendEmail, SUPPORT_EMAIL } from './email.js';
 import { assessmentIds, assessmentIndex, assessmentTitle, loadAssessment } from './assessments.js';
@@ -197,7 +197,7 @@ app.post('/api/account/delete', requireAuth, limits.password, async (req, res) =
 });
 
 // ── Support ──────────────────────────────────────────
-app.get('/api/config', (_req, res) => res.json({ supportEmail: SUPPORT_EMAIL || null, billingMode }));
+app.get('/api/config', async (_req, res) => res.json({ supportEmail: SUPPORT_EMAIL || null, billingMode, founding: await foundingStatus() }));
 
 const TOPICS = ['General question', 'Billing & subscription', 'Account access', 'Course content', 'Partnerships & schools', 'Other'];
 app.post('/api/contact', limits.contact, async (req, res) => {

@@ -10,6 +10,15 @@ const PRICES: Record<string, string | undefined> = {
   monthly: process.env.STRIPE_PRICE_MONTHLY,
   annual: process.env.STRIPE_PRICE_ANNUAL,
 };
+// Founding Member pricing: discounted prices that subscribers keep for as long as they stay
+// subscribed (Stripe keeps each subscription on the price it started with). Turn the offer on
+// with FOUNDING_OFFER=true; optionally cap it with FOUNDING_LIMIT (number of members).
+const FOUNDING_PRICES: Record<string, string | undefined> = {
+  monthly: process.env.STRIPE_PRICE_FOUNDING_MONTHLY,
+  annual: process.env.STRIPE_PRICE_FOUNDING_ANNUAL,
+};
+const FOUNDING_ON = process.env.FOUNDING_OFFER === 'true';
+const FOUNDING_LIMIT = Math.max(0, Number(process.env.FOUNDING_LIMIT || 0)) || null;
 const APP_URL = process.env.APP_URL || 'http://localhost:5173';
 const demoBilling = !stripe && process.env.ALLOW_DEMO_BILLING === 'true' && process.env.NODE_ENV !== 'production';
 
@@ -17,19 +26,31 @@ export const billingMode = stripe ? 'stripe' : demoBilling ? 'demo' : 'disabled'
 
 export const billingRouter = Router();
 
+/** Whether new subscribers currently get founding pricing, and how many spots remain. */
+export async function foundingStatus() {
+  const configured = billingMode === 'demo' || (billingMode === 'stripe' && !!FOUNDING_PRICES.monthly && !!FOUNDING_PRICES.annual);
+  if (!FOUNDING_ON || !configured) return { active: false, limit: null as number | null, remaining: null as number | null };
+  if (!FOUNDING_LIMIT) return { active: true, limit: null, remaining: null };
+  const row = await db.get<{ n: number | string }>("SELECT COUNT(*) AS n FROM users WHERE sub_plan LIKE 'founding-%'");
+  const remaining = Math.max(0, FOUNDING_LIMIT - Number(row?.n ?? 0));
+  return { active: remaining > 0, limit: FOUNDING_LIMIT, remaining };
+}
+
 billingRouter.post('/checkout', requireAuth, async (req, res) => {
   const user = req.user!;
-  const plan = req.body?.plan === 'annual' ? 'annual' : 'monthly';
+  const interval = req.body?.plan === 'annual' ? 'annual' : 'monthly';
+  const founding = (await foundingStatus()).active;
+  const plan = founding ? `founding-${interval}` : interval;
 
   if (billingMode === 'demo') {
     // Local development only: grant a subscription without payment.
-    const end = Math.floor(Date.now() / 1000) + (plan === 'annual' ? 365 : 30) * 86400;
+    const end = Math.floor(Date.now() / 1000) + (interval === 'annual' ? 365 : 30) * 86400;
     await db.run("UPDATE users SET sub_status='active', sub_plan=?, sub_period_end=? WHERE id=?", [plan, end, user.id]);
     return res.json({ url: `${APP_URL}/account?checkout=success&demo=1` });
   }
   if (!stripe) return res.status(503).json({ error: 'Billing is not configured yet.' });
-  const price = PRICES[plan];
-  if (!price) return res.status(503).json({ error: `No Stripe price configured for the ${plan} plan.` });
+  const price = founding ? FOUNDING_PRICES[interval] : PRICES[interval];
+  if (!price) return res.status(503).json({ error: `No Stripe price configured for the ${interval} plan.` });
 
   let customer = user.stripe_customer_id;
   if (!customer) {
@@ -83,8 +104,9 @@ async function applySubscription(sub: Stripe.Subscription) {
   // current_period_end lives on subscription items in recent Stripe API versions.
   const item = sub.items?.data?.[0] as (Stripe.SubscriptionItem & { current_period_end?: number }) | undefined;
   const periodEnd = item?.current_period_end ?? (sub as unknown as { current_period_end?: number }).current_period_end ?? null;
-  const interval = item?.price?.recurring?.interval;
-  const plan = sub.metadata?.plan || (interval === 'year' ? 'annual' : 'monthly');
+  const interval = item?.price?.recurring?.interval === 'year' ? 'annual' : 'monthly';
+  const isFounding = !!item?.price?.id && Object.values(FOUNDING_PRICES).includes(item.price.id);
+  const plan = sub.metadata?.plan || (isFounding ? `founding-${interval}` : interval);
   const userId = sub.metadata?.userId;
   const result = await db.run(
     'UPDATE users SET stripe_subscription_id=?, sub_status=?, sub_plan=?, sub_period_end=? WHERE stripe_customer_id=?',

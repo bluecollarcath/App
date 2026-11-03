@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { ArrowRight, BookOpen, CheckCircle2, Calculator, GraduationCap, LineChart, Zap } from 'lucide-react';
 import { useApi, useTitle } from '../lib/hooks';
 import type { Catalog } from '../lib/api';
-import { PLANS } from '../lib/api';
+import { FOUNDING_PLANS, PLANS, type SiteConfig } from '../lib/api';
 import { InlineMd } from '../components/Markdown';
 import CourseCard from '../components/CourseCard';
 
@@ -17,6 +17,8 @@ const FAQ = [
 export default function Home() {
   useTitle('');
   const { data } = useApi<Catalog>('/catalog');
+  const { data: config } = useApi<SiteConfig>('/config');
+  const founding = !!config?.founding?.active;
   const featured = data?.courses.filter((c) => ['circuit-analysis-1', 'signals-and-systems', 'microelectronics-1', 'electromagnetics', 'control-systems', 'power-systems'].includes(c.slug));
 
   return (
@@ -157,10 +159,12 @@ export default function Home() {
         <div className="mx-auto max-w-4xl px-4 text-center sm:px-6">
           <h2 className="text-3xl font-extrabold tracking-tight sm:text-4xl">One subscription. The entire degree's worth of material.</h2>
           <p className="mt-4 text-lg text-slate-300">
-            ${PLANS.monthly.price}/month or ${PLANS.annual.price}/year — less than a single textbook. Start free; upgrade when you're ready.
+            {founding
+              ? <>Founding Members pay just ${FOUNDING_PLANS.monthly.price}/month or ${FOUNDING_PLANS.annual.price}/year (regularly ${PLANS.monthly.price} and ${PLANS.annual.price}), locked in for as long as you stay subscribed.</>
+              : <>${PLANS.monthly.price}/month or ${PLANS.annual.price}/year, less than a single textbook. Start free; upgrade when you're ready.</>}
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
-            <Link to="/pricing" className="btn-brand">View plans</Link>
+            <Link to="/pricing" className="btn-brand">{founding ? 'Become a founding member' : 'View plans'}</Link>
             <Link to="/courses/circuit-analysis-1/lessons/1-1" className="inline-flex items-center gap-2 rounded-xl border border-slate-600 px-5 py-3 text-sm font-semibold hover:border-slate-400">Try a free lesson</Link>
           </div>
         </div>

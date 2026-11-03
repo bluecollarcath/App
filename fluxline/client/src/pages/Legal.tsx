@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import type { ReactNode } from 'react';
 import { SITE } from '../lib/site';
-import { PLANS } from '../lib/api';
+import { FOUNDING_PLANS, PLANS } from '../lib/api';
 import { useTitle } from '../lib/hooks';
 
 function LegalPage({ title, children }: { title: string; children: ReactNode }) {
@@ -40,6 +40,7 @@ export function Terms() {
         <li><strong>Plans.</strong> We offer a free tier and paid subscriptions, currently ${PLANS.monthly.price} per month or ${PLANS.annual.price} per year. Prices shown at checkout are the prices you pay, plus any applicable taxes.</li>
         <li><strong>Automatic renewal.</strong> Paid subscriptions renew automatically at the end of each billing period, and your payment method is charged, until you cancel.</li>
         <li><strong>Cancelling.</strong> You can cancel at any time from your account page. Cancellation stops future renewals; you keep access until the end of the period you've already paid for.</li>
+        <li><strong>Founding Member pricing.</strong> When we offer it, Founding Member pricing (currently ${FOUNDING_PLANS.monthly.price} per month or ${FOUNDING_PLANS.annual.price} per year) is available to new subscribers for a limited time or a limited number of members. Your founding price stays the same for as long as your subscription remains active without a break, including if our regular prices go up. If your subscription ends (for example, you cancel or a payment fails and isn't fixed) and you subscribe again later, the regular price at that time applies.</li>
         <li><strong>Price changes.</strong> If we change the price of your plan, we'll tell you by email at least 30 days before the new price applies to your next renewal. You can cancel before then.</li>
         <li><strong>Payment processing.</strong> Payments are processed by Stripe. We never see or store your full card number.</li>
         <li><strong>Refunds</strong> are covered by our <Link to="/refunds">Refund Policy</Link>.</li>

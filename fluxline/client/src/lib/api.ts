@@ -107,5 +107,23 @@ export async function api<T>(path: string, init: { method?: string; body?: unkno
 
 export const PLANS = {
   monthly: { label: 'Monthly', price: 29, per: 'month', note: 'Cancel anytime' },
-  annual: { label: 'Annual', price: 249, per: 'year', note: 'About $20.75/month — save 28%' },
+  annual: { label: 'Annual', price: 249, per: 'year', note: 'About $20.75/month, save 28%' },
 } as const;
+
+/** Founding Member prices. Keep these in sync with the founding prices in Stripe. */
+export const FOUNDING_PLANS = {
+  monthly: { label: 'Founding Monthly', price: 15, per: 'month', note: 'Half the regular price, locked in' },
+  annual: { label: 'Founding Annual', price: 129, per: 'year', note: 'About $10.75/month, locked in' },
+} as const;
+
+export interface FoundingStatus { active: boolean; limit: number | null; remaining: number | null }
+export interface SiteConfig { supportEmail: string | null; billingMode: string; founding?: FoundingStatus }
+
+/** Display details for a stored plan name ("monthly", "annual", "founding-monthly", "founding-annual"). */
+export function planInfo(plan: string | null) {
+  if (!plan) return null;
+  const founding = plan.startsWith('founding-');
+  const key = plan.replace('founding-', '') as 'monthly' | 'annual';
+  const p = (founding ? FOUNDING_PLANS : PLANS)[key];
+  return p ? { ...p, founding } : null;
+}

@@ -81,7 +81,10 @@ export async function mockApi(path: string, method: string, body: Record<string,
     store.users = store.users.filter((x) => x.id !== u.id); save(store);
     return { ok: true };
   }
-  if (p === '/config') return { supportEmail: null, billingMode: 'demo' };
+  if (p === '/config') {
+    const claimed = store.users.filter((u) => u.plan?.startsWith('founding-')).length;
+    return { supportEmail: null, billingMode: 'demo', founding: { active: true, limit: 500, remaining: Math.max(0, 500 - claimed) } };
+  }
   if (p === '/contact') {
     if (!String(body?.name ?? '').trim()) throw new MockError(400, 'Please enter your name.');
     if (String(body?.message ?? '').trim().length < 10) throw new MockError(400, 'Please write a little more about how we can help (at least 10 characters).');
@@ -138,8 +141,9 @@ export async function mockApi(path: string, method: string, body: Record<string,
     save(store); return { ok: true };
   }
   if (p === '/billing/checkout') {
-    const u = need(); const plan = body?.plan === 'annual' ? 'annual' : 'monthly';
-    u.plan = plan; u.status = 'active'; u.periodEnd = Math.floor(Date.now() / 1000) + (plan === 'annual' ? 365 : 30) * 86400;
+    const u = need(); const interval = body?.plan === 'annual' ? 'annual' : 'monthly';
+    const plan = `founding-${interval}`;
+    u.plan = plan; u.status = 'active'; u.periodEnd = Math.floor(Date.now() / 1000) + (interval === 'annual' ? 365 : 30) * 86400;
     save(store); return { url: '/account?checkout=success&demo=1' };
   }
   if (p === '/billing/portal') { const u = need(); u.status = 'canceled'; save(store); return { url: '/account?demo_cancel=1' }; }

@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../lib/auth';
-import { api, followRedirect, PLANS, type User } from '../lib/api';
+import { api, followRedirect, planInfo, type User } from '../lib/api';
 import { useTitle } from '../lib/hooks';
 import { inputCls } from './PasswordPages';
 
@@ -104,7 +104,7 @@ export default function Account() {
     } catch (e) { setErr((e as Error).message); setBusy(false); }
   };
 
-  const plan = user.plan === 'annual' || user.plan === 'monthly' ? PLANS[user.plan] : null;
+  const plan = planInfo(user.plan);
   const paying = user.status === 'active' || user.status === 'trialing';
   return (
     <div className="mx-auto max-w-3xl px-4 py-14 sm:px-6">
@@ -132,6 +132,7 @@ export default function Account() {
             <p className="mt-3 text-sm text-slate-700">
               <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-semibold text-emerald-700">Active</span>
               <span className="ml-2">{plan ? `${plan.label}: $${plan.price}/${plan.per}` : 'Full access'}</span>
+              {plan?.founding && <span className="ml-2 rounded-full bg-brand-grad px-2.5 py-0.5 text-xs font-bold text-ink">Founding Member · price locked in</span>}
             </p>
             {user.periodEnd && <p className="mt-2 text-sm text-slate-500">Renews on {new Date(user.periodEnd * 1000).toLocaleDateString()}.</p>}
             <button onClick={manage} disabled={busy} className="btn-ghost mt-5">{busy ? 'Opening…' : 'Manage billing or cancel'}</button>

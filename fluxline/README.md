@@ -143,6 +143,23 @@ payment so you can try the full experience. Demo billing is always off when
    reminders about upcoming renewals**, since the Refund Policy promises annual-renewal
    reminders.
 
+## Founding Member pricing
+
+New subscribers can get discounted "founding" prices ($15/month, $129/year) that they keep for
+as long as their subscription stays active. Stripe keeps each subscription on the price it
+started with, so raising regular prices later never affects founding members.
+
+1. In Stripe, add two more recurring prices to the product: **$15/month** and **$129/year**.
+2. In Render, set `STRIPE_PRICE_FOUNDING_MONTHLY` and `STRIPE_PRICE_FOUNDING_ANNUAL` to those
+   price IDs, and `FOUNDING_OFFER=true`.
+3. Optional: `FOUNDING_LIMIT=500` caps the offer; the pricing page shows the spots left and
+   switches back to regular prices automatically when they run out.
+4. To end the offer, set `FOUNDING_OFFER=false` and redeploy. Existing founding members keep
+   their price.
+
+The displayed founding prices live in `client/src/lib/api.ts` (`FOUNDING_PLANS`); keep them in
+sync with Stripe. If founding prices aren't configured, the site simply shows regular pricing.
+
 ## Deploy
 
 ```bash
