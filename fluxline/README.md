@@ -23,9 +23,10 @@ curriculum, sequenced like an ABET-accredited B.S.E.E. degree.
 ## Content status
 
 The full catalog (every course, unit, lesson title, and topic list) is defined in
-`server/src/catalog.ts`. **239 lessons are fully written** so far, and 23 of the 24 courses are complete (each with unit quizzes and a final exam), plus the first lesson
-of every other course. Lessons without
-a file show their topic outline and an "in production" notice. To publish a lesson, add
+`server/src/catalog.ts`. **All 248 lessons are written**, and all 24 courses are complete,
+each with unit quizzes and a final exam (2,200+ auto-graded questions in total). A catalog lesson
+without a content file shows its topic outline and an "in production" notice, so new lessons can
+be added to the catalog before they're written. To publish a lesson, add
 `server/content/lessons/<course-slug>/<unit>-<lesson>.md` (e.g. `circuit-analysis-1/1-4.md`) —
 it's picked up on the next server start.
 
