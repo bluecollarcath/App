@@ -13,7 +13,12 @@
 | `icon-mark-transparent-1024.png` | 1024×1024 | The Ω mark alone on a transparent background (stickers, watermarks, merch) |
 | `logo-white-text-transparent.png` | 2400×520 | Full logo for dark backgrounds (videos, slides, dark shirts) |
 | `logo-dark-text-transparent.png` | 2400×520 | Full logo for light backgrounds (documents, white shirts, invoices) |
+| `emblem.svg` | any size (vector) | Round badge: Ω mark, OHMENTUM / ELECTRICAL ENGINEERING on the ring. Stickers, merch, print, slides, video intros. Lettering is outlined, so no font is needed |
+| `emblem-2048.png` | 2048×2048, transparent | Emblem for print, merch and large graphics |
+| `emblem-512.png` | 512×512, transparent | Emblem for the web, email, documents |
 | `logo-on-dark-background.png` | 2400×800 | Full logo on the brand background, ready to post |
+
+**Emblem sizes:** the ring lettering stays readable down to about 128 px across. Smaller than that (favicons, tiny avatars), use `app-icon-1024.png` or the Ω mark instead.
 
 **Colors:** background `#07140e`; gradient `#b6ffdc → #2fe592 → #0b9e5d`; text white.
 **Font:** Kanit Black Italic (free, Google Fonts) for the logo; Inter for everything else.
