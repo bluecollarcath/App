@@ -105,7 +105,9 @@ export default function Account() {
   };
 
   const plan = planInfo(user.plan);
-  const paying = user.status === 'active' || user.status === 'trialing';
+  const paying = user.status === 'active' || user.status === 'trialing' || user.status === 'past_due';
+  const pastDue = user.status === 'past_due';
+  const endDate = user.periodEnd ? new Date(user.periodEnd * 1000).toLocaleDateString() : null;
   return (
     <div className="mx-auto max-w-3xl px-4 py-14 sm:px-6">
       <h1 className="text-3xl font-extrabold tracking-tight text-ink">Account</h1>
@@ -130,12 +132,26 @@ export default function Account() {
         ) : user.subscribed ? (
           <>
             <p className="mt-3 text-sm text-slate-700">
-              <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-semibold text-emerald-700">Active</span>
+              {pastDue
+                ? <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-800">Payment due</span>
+                : user.cancelAtPeriodEnd
+                  ? <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-semibold text-slate-700">Canceled</span>
+                  : <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-semibold text-emerald-700">Active</span>}
               <span className="ml-2">{plan ? `${plan.label}: $${plan.price}/${plan.per}` : 'Full access'}</span>
               {plan?.founding && <span className="ml-2 rounded-full bg-brand-grad px-2.5 py-0.5 text-xs font-bold text-ink">Founding Member · price locked in</span>}
             </p>
-            {user.periodEnd && <p className="mt-2 text-sm text-slate-500">Renews on {new Date(user.periodEnd * 1000).toLocaleDateString()}.</p>}
-            <button onClick={manage} disabled={busy} className="btn-ghost mt-5">{busy ? 'Opening…' : 'Manage billing or cancel'}</button>
+            {pastDue ? (
+              <div className="mt-3 rounded-xl bg-amber-50 p-3 text-sm text-amber-900 ring-1 ring-amber-200">
+                Your last payment didn't go through. You still have full access while we retry the charge; please update your payment method to keep your subscription{plan?.founding ? ' and your Founding Member price' : ''}.
+              </div>
+            ) : endDate && (
+              <p className="mt-2 text-sm text-slate-500">
+                {user.cancelAtPeriodEnd ? `Your subscription won't renew. You have full access until ${endDate}.` : `Renews on ${endDate}.`}
+              </p>
+            )}
+            <button onClick={manage} disabled={busy} className={pastDue ? 'btn-primary mt-5' : 'btn-ghost mt-5'}>
+              {busy ? 'Opening…' : pastDue ? 'Update payment method' : user.cancelAtPeriodEnd ? 'Manage billing or resubscribe' : 'Manage billing or cancel'}
+            </button>
           </>
         ) : (
           <>

@@ -90,6 +90,23 @@ NMOS PMOS LOOP BOX SUM ARROW LINE TEXT Q CIRCLE`, logic `AND OR NAND NOR XOR XNO
 and `STATE` bubbles for state diagrams. Plots accept `yticks: none` and `label:` for timing diagrams. Plot formulas support `+ − * / ^`, `sin cos tan exp ln
 log10 sqrt abs u (step) rect mod min max tanh`, and `pi`.
 
+## Search engines and link previews
+
+The server fills in each page's `<title>`, description, canonical URL and Open Graph tags
+(`server/src/seo.ts`), so search results and links shared in Slack, iMessage, LinkedIn or X show
+the right course or lesson, with the share image `client/public/og-image.jpg`. It also serves
+`/robots.txt` and `/sitemap.xml` (the main pages, every course, and each free first lesson),
+marks account pages and locked lessons `noindex`, and returns a real 404 for unknown URLs.
+These use `APP_URL`, so set it to your real domain. After launch, submit
+`https://your-domain/sitemap.xml` in Google Search Console and Bing Webmaster Tools.
+
+## Pre-launch smoke test
+
+`server/scripts/smoke-test.mjs` runs the whole customer journey against a local server: sign-up,
+free vs. locked lessons, Stripe webhooks (signed locally), quizzes, failed payments and
+cancellation, password reset, support forms, owner access and account deletion. Instructions
+are at the top of the file. Run it against a scratch database before each release.
+
 ## Project layout
 
 ```
@@ -117,8 +134,16 @@ payment so you can try the full experience. Demo billing is always off when
 2. Add a webhook endpoint at `https://your-domain/api/stripe/webhook` for
    `checkout.session.completed` and `customer.subscription.created|updated|deleted`; put its
    signing secret in `STRIPE_WEBHOOK_SECRET`. (Locally: `stripe listen --forward-to localhost:8787/api/stripe/webhook`.)
-3. Enable the Customer Portal in the Stripe dashboard (used by "Manage billing").
-4. The prices displayed on the site live in `client/src/lib/api.ts` (`PLANS`: $29/mo, $249/yr) —
+3. Enable the Customer Portal in the Stripe dashboard (used by "Manage billing"). Allow customers
+   to update payment methods and cancel **at the end of the billing period**; the Account page
+   then shows "won't renew, full access until ⟨date⟩" instead of a renewal date.
+4. **Failed payments:** under **Settings → Billing → Subscriptions and emails → Manage failed
+   payments**, turn on Smart Retries and choose to **cancel the subscription** (or mark it
+   unpaid) after all retries fail. While Stripe is retrying, the subscription is `past_due`:
+   the subscriber keeps access and sees a banner asking them to update their card. When
+   retries run out, access ends automatically. Also turn on Stripe's emails for failed payments
+   and expiring cards.
+5. The prices displayed on the site live in `client/src/lib/api.ts` (`PLANS`: $29/mo, $249/yr) —
    keep them in sync with your Stripe prices.
 
 ## Going live on Render (checklist)

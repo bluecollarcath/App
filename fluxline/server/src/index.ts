@@ -15,6 +15,7 @@ import { COURSES, STAGES, getCourse, isFreeLesson, lessonExists, totalLessons } 
 import { passwordChangedEmail, resetEmail, sendEmail, SUPPORT_EMAIL } from './email.js';
 import { assessmentIds, assessmentIndex, assessmentTitle, loadAssessment } from './assessments.js';
 import { grade, PASS_PERCENT, publicQuestion } from './quizParse.js';
+import { htmlRenderer, robotsTxt, sitemapXml } from './seo.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const CONTENT_DIR = path.resolve(here, '../content/lessons');
@@ -334,9 +335,17 @@ app.use('/api/billing', billingRouter);
 app.use('/api', (_req, res) => res.status(404).json({ error: 'Not found' }));
 
 // ── Serve the built client in production ──────────────
+app.get('/robots.txt', (_req, res) => res.type('text/plain').send(robotsTxt(APP_URL)));
+app.get('/sitemap.xml', (_req, res) => res.type('application/xml').send(sitemapXml(APP_URL)));
 if (fs.existsSync(CLIENT_DIST)) {
   app.use(express.static(CLIENT_DIST, { index: false, maxAge: '1h' }));
-  app.get(/.*/, (_req, res) => res.sendFile(path.join(CLIENT_DIST, 'index.html')));
+  // Every page is the same app, but the head tags (title, description, link previews) and the
+  // HTTP status are filled in per route so search engines and shared links see the right page.
+  const renderHtml = htmlRenderer(path.join(CLIENT_DIST, 'index.html'), APP_URL);
+  app.get(/.*/, (req, res) => {
+    const { status, html } = renderHtml(req.path);
+    res.status(status).type('html').set('Cache-Control', 'no-cache').send(html);
+  });
 }
 
 app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {

@@ -99,6 +99,12 @@ export default function Layout() {
           </div>
         )}
       </header>
+      {user?.status === 'past_due' && (
+        <div className="bg-amber-50 px-4 py-2 text-center text-sm text-amber-900 ring-1 ring-amber-200">
+          Your last payment didn't go through.{' '}
+          <Link to="/account" className="font-semibold underline">Update your payment method</Link> to keep full access.
+        </div>
+      )}
 
       <main className="flex-1"><Outlet /></main>
 

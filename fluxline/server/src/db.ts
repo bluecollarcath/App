@@ -140,10 +140,14 @@ export async function migrate() {
   // Upgrade databases created by the first version of Ohmentum.
   if (db.kind === 'postgres') {
     await db.run('ALTER TABLE users ADD COLUMN IF NOT EXISTS token_version INTEGER NOT NULL DEFAULT 0');
+    await db.run('ALTER TABLE users ADD COLUMN IF NOT EXISTS sub_cancel_at_end INTEGER NOT NULL DEFAULT 0');
   } else {
     const cols = await db.all<{ name: string }>('PRAGMA table_info(users)');
     if (!cols.some((c) => c.name === 'token_version')) {
       await db.run('ALTER TABLE users ADD COLUMN token_version INTEGER NOT NULL DEFAULT 0');
+    }
+    if (!cols.some((c) => c.name === 'sub_cancel_at_end')) {
+      await db.run('ALTER TABLE users ADD COLUMN sub_cancel_at_end INTEGER NOT NULL DEFAULT 0');
     }
   }
   await db.run('UPDATE users SET email = lower(email) WHERE email <> lower(email)');
@@ -163,6 +167,8 @@ export interface UserRow {
   sub_status: string | null;
   sub_plan: string | null;
   sub_period_end: number | null;
+  /** 1 when the subscriber has canceled and access ends at sub_period_end. */
+  sub_cancel_at_end: number | null;
 }
 
 export function findUserById(id: number) {
@@ -185,8 +191,15 @@ export function isOwner(u: UserRow | undefined | null) {
   return !!u && OWNER_EMAILS.has(u.email.toLowerCase());
 }
 
+/**
+ * Statuses that keep access. 'past_due' means a renewal payment failed and Stripe is still
+ * retrying it (Smart Retries, up to a couple of weeks); subscribers keep access meanwhile and
+ * see a prompt to update their card. Stripe then moves the subscription to 'canceled' or
+ * 'unpaid', which removes access.
+ */
+const ACCESS_STATUSES = new Set(['active', 'trialing', 'past_due']);
 export function isSubscribed(u: UserRow | undefined | null) {
-  return !!u && (isOwner(u) || u.sub_status === 'active' || u.sub_status === 'trialing');
+  return !!u && (isOwner(u) || ACCESS_STATUSES.has(u.sub_status ?? ''));
 }
 
 export function publicUser(u: UserRow) {
@@ -199,6 +212,7 @@ export function publicUser(u: UserRow) {
     plan: u.sub_plan,
     status: u.sub_status,
     periodEnd: u.sub_period_end,
+    cancelAtPeriodEnd: !!u.sub_cancel_at_end,
     hasBillingAccount: !!u.stripe_customer_id,
   };
 }

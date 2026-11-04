@@ -7,6 +7,8 @@ export interface User {
   plan: string | null;
   status: string | null;
   periodEnd: number | null;
+  /** The subscriber canceled; access continues until periodEnd. */
+  cancelAtPeriodEnd?: boolean;
   hasBillingAccount: boolean;
 }
 

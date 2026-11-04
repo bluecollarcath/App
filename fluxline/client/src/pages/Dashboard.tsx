@@ -23,8 +23,14 @@ export default function Dashboard() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6">
-      <h1 className="text-3xl font-extrabold tracking-tight text-ink">Welcome back, {user.name}</h1>
-      <p className="mt-2 text-slate-600">{totalDone ? `You've completed ${totalDone} lesson${totalDone === 1 ? '' : 's'}${data ? ` of ${data.totals.lessons}` : ''}.` : 'Pick a course and start with its free first lesson.'}</p>
+      <h1 className="text-3xl font-extrabold tracking-tight text-ink">{totalDone ? 'Welcome back' : 'Welcome'}, {user.name}</h1>
+      <p className="mt-2 text-slate-600">
+        {totalDone
+          ? `You've completed ${totalDone} lesson${totalDone === 1 ? '' : 's'}${data ? ` of ${data.totals.lessons}` : ''}.`
+          : user.subscribed
+            ? 'Every course is unlocked. Pick one below, or browse the full curriculum.'
+            : 'Pick a course and start with its free first lesson.'}
+      </p>
 
       {!user.subscribed && (
         <div className="mt-6 flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-emerald-50 p-5 ring-1 ring-emerald-200">

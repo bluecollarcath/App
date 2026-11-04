@@ -108,14 +108,17 @@ async function applySubscription(sub: Stripe.Subscription) {
   const isFounding = !!item?.price?.id && Object.values(FOUNDING_PRICES).includes(item.price.id);
   const plan = sub.metadata?.plan || (isFounding ? `founding-${interval}` : interval);
   const userId = sub.metadata?.userId;
+  // Canceling in the Billing Portal keeps the subscription active until the period ends;
+  // Stripe reports that with cancel_at_period_end (or a cancel_at timestamp).
+  const cancelAtEnd = sub.status !== 'canceled' && (sub.cancel_at_period_end || !!sub.cancel_at) ? 1 : 0;
   const result = await db.run(
-    'UPDATE users SET stripe_subscription_id=?, sub_status=?, sub_plan=?, sub_period_end=? WHERE stripe_customer_id=?',
-    [sub.id, sub.status, plan, periodEnd, customer],
+    'UPDATE users SET stripe_subscription_id=?, sub_status=?, sub_plan=?, sub_period_end=?, sub_cancel_at_end=? WHERE stripe_customer_id=?',
+    [sub.id, sub.status, plan, periodEnd, cancelAtEnd, customer],
   );
   if (result.changes === 0 && userId) {
     await db.run(
-      'UPDATE users SET stripe_customer_id=?, stripe_subscription_id=?, sub_status=?, sub_plan=?, sub_period_end=? WHERE id=?',
-      [customer, sub.id, sub.status, plan, periodEnd, Number(userId)],
+      'UPDATE users SET stripe_customer_id=?, stripe_subscription_id=?, sub_status=?, sub_plan=?, sub_period_end=?, sub_cancel_at_end=? WHERE id=?',
+      [customer, sub.id, sub.status, plan, periodEnd, cancelAtEnd, Number(userId)],
     );
   }
 }
