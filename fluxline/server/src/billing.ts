@@ -3,26 +3,52 @@ import Stripe from 'stripe';
 import db, { findUserById, publicUser, type UserRow } from './db.js';
 import { requireAuth } from './auth.js';
 
-const stripeKey = process.env.STRIPE_SECRET_KEY;
+/** Reads a setting, ignoring stray spaces and surrounding quotes pasted into the host's dashboard. */
+function env(name: string): string | undefined {
+  const v = process.env[name]?.trim().replace(/^(["'])(.*)\1$/, '$2').trim();
+  return v ? v : undefined;
+}
+const flag = (name: string) => /^(true|yes|1|on)$/i.test(env(name) ?? '');
+
+const stripeKey = env('STRIPE_SECRET_KEY');
+const WEBHOOK_SECRET = env('STRIPE_WEBHOOK_SECRET');
 export const stripe = stripeKey ? new Stripe(stripeKey) : null;
 
 const PRICES: Record<string, string | undefined> = {
-  monthly: process.env.STRIPE_PRICE_MONTHLY,
-  annual: process.env.STRIPE_PRICE_ANNUAL,
+  monthly: env('STRIPE_PRICE_MONTHLY'),
+  annual: env('STRIPE_PRICE_ANNUAL'),
 };
 // Founding Member pricing: discounted prices that subscribers keep for as long as they stay
 // subscribed (Stripe keeps each subscription on the price it started with). Turn the offer on
 // with FOUNDING_OFFER=true; optionally cap it with FOUNDING_LIMIT (number of members).
 const FOUNDING_PRICES: Record<string, string | undefined> = {
-  monthly: process.env.STRIPE_PRICE_FOUNDING_MONTHLY,
-  annual: process.env.STRIPE_PRICE_FOUNDING_ANNUAL,
+  monthly: env('STRIPE_PRICE_FOUNDING_MONTHLY'),
+  annual: env('STRIPE_PRICE_FOUNDING_ANNUAL'),
 };
-const FOUNDING_ON = process.env.FOUNDING_OFFER === 'true';
-const FOUNDING_LIMIT = Math.max(0, Number(process.env.FOUNDING_LIMIT || 0)) || null;
-const APP_URL = process.env.APP_URL || 'http://localhost:5173';
-const demoBilling = !stripe && process.env.ALLOW_DEMO_BILLING === 'true' && process.env.NODE_ENV !== 'production';
+const FOUNDING_ON = flag('FOUNDING_OFFER');
+const FOUNDING_LIMIT = Math.max(0, Number(env('FOUNDING_LIMIT') || 0)) || null;
+const APP_URL = env('APP_URL') || 'http://localhost:5173';
+const demoBilling = !stripe && flag('ALLOW_DEMO_BILLING') && process.env.NODE_ENV !== 'production';
 
 export const billingMode = stripe ? 'stripe' : demoBilling ? 'demo' : 'disabled';
+
+// Startup report: which billing settings are present (names only, never values), and why the
+// founding offer is on or off. Shown in the host's logs to make configuration mistakes obvious.
+if (billingMode === 'stripe') {
+  const missing = ['STRIPE_WEBHOOK_SECRET', 'STRIPE_PRICE_MONTHLY', 'STRIPE_PRICE_ANNUAL'].filter((n) => !env(n));
+  const badPrice = ['STRIPE_PRICE_MONTHLY', 'STRIPE_PRICE_ANNUAL', 'STRIPE_PRICE_FOUNDING_MONTHLY', 'STRIPE_PRICE_FOUNDING_ANNUAL']
+    .filter((n) => env(n) && !env(n)!.startsWith('price_'));
+  if (missing.length) console.warn(`[billing] Missing settings: ${missing.join(', ')}`);
+  if (badPrice.length) console.warn(`[billing] These should be Stripe price IDs starting with "price_": ${badPrice.join(', ')}`);
+  if (!stripeKey!.startsWith('sk_')) console.warn('[billing] STRIPE_SECRET_KEY should start with "sk_" (use the Secret key, not the publishable key).');
+  console.log(`[billing] Stripe ${stripeKey!.startsWith('sk_live_') ? 'LIVE' : 'TEST'} mode.`);
+}
+if (billingMode !== 'disabled') {
+  const fMissing = ['STRIPE_PRICE_FOUNDING_MONTHLY', 'STRIPE_PRICE_FOUNDING_ANNUAL'].filter((n) => !env(n));
+  if (!FOUNDING_ON) console.log(`[billing] Founding offer OFF (FOUNDING_OFFER is ${env('FOUNDING_OFFER') === undefined ? 'not set' : 'not "true"'}).`);
+  else if (billingMode === 'stripe' && fMissing.length) console.warn(`[billing] Founding offer OFF: missing ${fMissing.join(', ')}.`);
+  else console.log(`[billing] Founding offer ON${FOUNDING_LIMIT ? `, capped at ${FOUNDING_LIMIT} members` : ', no cap'}.`);
+}
 
 export const billingRouter = Router();
 
@@ -127,10 +153,10 @@ async function applySubscription(sub: Stripe.Subscription) {
 export const stripeWebhook = [
   express.raw({ type: 'application/json' }),
   async (req: express.Request, res: express.Response) => {
-    if (!stripe || !process.env.STRIPE_WEBHOOK_SECRET) return res.status(503).send('Stripe not configured');
+    if (!stripe || !WEBHOOK_SECRET) return res.status(503).send('Stripe not configured');
     let event: Stripe.Event;
     try {
-      event = stripe.webhooks.constructEvent(req.body, req.headers['stripe-signature'] as string, process.env.STRIPE_WEBHOOK_SECRET);
+      event = stripe.webhooks.constructEvent(req.body, req.headers['stripe-signature'] as string, WEBHOOK_SECRET);
     } catch (err) {
       return res.status(400).send(`Webhook signature verification failed: ${(err as Error).message}`);
     }
