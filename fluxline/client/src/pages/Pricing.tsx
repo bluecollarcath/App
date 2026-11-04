@@ -38,7 +38,7 @@ export default function Pricing() {
         <div className="mx-auto mt-10 flex max-w-3xl flex-col items-center gap-3 rounded-2xl bg-ink px-6 py-5 text-center text-white sm:flex-row sm:text-left">
           <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand-grad text-ink"><Zap size={22} /></div>
           <div className="flex-1">
-            <div className="font-bold">The full curriculum is live: all 24 courses, from calculus and circuits to power systems, RF and VLSI, each with quizzes and a final exam.</div>
+            <div className="font-bold">The full curriculum is live: all 25 courses, from calculus and circuits to PCB design, power systems, RF and VLSI, each with quizzes and a final exam.</div>
             <div className="mt-0.5 text-sm text-slate-300">Founding Members pay about half the regular price, and keep that price for life while subscribed.</div>
           </div>
           {spots != null && (

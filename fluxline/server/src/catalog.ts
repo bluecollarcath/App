@@ -459,6 +459,35 @@ export const COURSES: CourseDef[] = [
     ],
   },
 
+  {
+    slug: 'pcb-design', code: 'ECE 270', title: 'PCB Design & Schematic Reading', stage: 3, track: 'Circuits & Electronics', hours: 40,
+    description: 'Read any schematic and datasheet with confidence, then design, lay out, order, assemble and debug your own printed circuit boards.',
+    prereqs: ['circuit-analysis-1'],
+    outcomes: ['Read schematics, symbols, reference designators and datasheets fluently', 'Capture a schematic and choose footprints in an EDA tool', 'Place and route a board with sound grounding, decoupling and trace sizing', 'Produce manufacturing files, then assemble, bring up and debug a board'],
+    units: [
+      { title: 'Reading Schematics', lessons: [
+        ['Schematic Symbols & Conventions', 'component symbols; reference designators; value notation; power and ground'],
+        ['Reading a Real Schematic', 'sheets; net labels; buses; signal flow; functional blocks'],
+        ['Datasheets & Component Selection', 'absolute maximum ratings; electrical characteristics; packages; derating'],
+      ] },
+      { title: 'From Schematic to Board', lessons: [
+        ['How PCBs Are Made', 'layers; stackups; copper weight; vias; finishes; fab capabilities'],
+        ['Schematic Capture, Symbols & Footprints', 'EDA workflow; libraries; footprints; ERC; netlists'],
+        ['Component Placement', 'mechanical constraints; grouping; critical loops; thermal; DFM'],
+      ] },
+      { title: 'Routing & Signal Integrity', lessons: [
+        ['Routing & Trace Sizing', 'current capacity; voltage clearance; vias; routing rules'],
+        ['Grounding, Return Paths & Decoupling', 'ground planes; loop area; decoupling networks'],
+        ['High-Speed Signals & Controlled Impedance', 'rise time; impedance; differential pairs; termination'],
+        ['Power, Thermal & EMC Layout', 'switching-regulator hot loops; thermal vias; emissions; ESD'],
+      ] },
+      { title: 'Building the Board', lessons: [
+        ['Design Checks & Manufacturing Files', 'DRC; Gerbers; drill files; BOM; pick-and-place; ordering'],
+        ['Assembly, Bring-Up & Debugging', 'soldering; reflow; first power-up; debugging; rework'],
+      ] },
+    ],
+  },
+
   // ───────────────────────────── STAGE 4 ─────────────────────────────
   {
     slug: 'communication-systems', code: 'ECE 440', title: 'Communication Systems', stage: 4, track: 'Signals & Systems', hours: 45,

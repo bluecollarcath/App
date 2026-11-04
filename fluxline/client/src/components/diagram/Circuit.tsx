@@ -9,7 +9,9 @@
 //   Z   x1,y1 x2,y2 [label]          generic impedance box
 //   SW  x1,y1 x2,y2 [label] [closed] switch
 //   W   x1,y1 x2,y2 [...] [dash] [color=anno|muted]  wire (extra points continue the wire)
+//   LED / ZD / CP / BAT / F / XTAL   LED, Zener, polarized cap (+ at first point), battery (+ at first point), fuse, crystal
 //   GND x,y      DOT x,y      T x,y [label]   ground, junction dot, open terminal
+//   VCC x,y [label]                  power-rail symbol (bar above the point, name above the bar)
 //   OA  x,y [flip]                   op-amp: − input (x−1, y−0.5), + input (x−1, y+0.5), output (x+1, y)
 //   NMOS / PMOS x,y [label] [mirror] gate (x−1, y), drain/source at (x, y∓1); mirror puts the gate on the right
 //   NPN / PNP x,y [label] [mirror]   base (x−1, y), collector (x, y−1), emitter (x, y+1) (PNP: emitter on top)
@@ -73,7 +75,8 @@ function parse(src: string) {
 }
 
 const key = (p: Pt) => `${Math.round(p[0] * 100)},${Math.round(p[1] * 100)}`;
-const BODY: Record<string, number> = { R: 38, C: 10, L: 44, V: 34, VAC: 34, I: 34, VD: 34, ID: 34, D: 18, Z: 40, SW: 34 };
+const BODY: Record<string, number> = { R: 38, C: 10, L: 44, V: 34, VAC: 34, I: 34, VD: 34, ID: 34, D: 18, Z: 40, SW: 34,
+  LED: 18, ZD: 18, CP: 10, BAT: 10, F: 34, XTAL: 26 };
 
 function arrowHead(x: number, y: number, ang: number, size = 9, fill = INK) {
   const a1 = ang + Math.PI * 0.85, a2 = ang - Math.PI * 0.85;
@@ -199,6 +202,27 @@ export default function Circuit({ source }: { source: string }) {
         }
       } else if (kind === 'D') {
         body = <>{leads(s0, s1)}<polygon points={`${s0},-10 ${s0},10 ${s1},0`} fill={INK} /><line x1={s1} y1={-10} x2={s1} y2={10} stroke={INK} strokeWidth={2.4} /></>;
+      } else if (kind === 'LED' || kind === 'ZD') {
+        const bar = kind === 'ZD'
+          ? <polyline points={`${s1 - 5},-14 ${s1},-10 ${s1},10 ${s1 + 5},14`} fill="none" stroke={INK} strokeWidth={2.4} />
+          : <line x1={s1} y1={-10} x2={s1} y2={10} stroke={INK} strokeWidth={2.4} />;
+        const emit = (x0: number) => { // small arrow pointing away from the body: light out
+          const ex = x0 + 7, ey = -24, a = Math.atan2(ey + 12, ex - x0);
+          return <g key={x0}><line x1={x0} y1={-12} x2={ex - 3 * Math.cos(a)} y2={ey - 3 * Math.sin(a)} stroke={ANNO} strokeWidth={1.6} />{arrowHead(ex, ey, a, 7, ANNO)}</g>;
+        };
+        body = <>{leads(s0, s1)}<polygon points={`${s0},-10 ${s0},10 ${s1},0`} fill={INK} />{bar}{kind === 'LED' && <>{emit(c - 3)}{emit(c + 5)}</>}</>;
+      } else if (kind === 'CP') {
+        body = <>{leads(s0, s1)}<line x1={s0} y1={-14} x2={s0} y2={14} stroke={INK} strokeWidth={2.6} /><path d={`M${s1 + 5},-14 Q${s1 - 4},0 ${s1 + 5},14`} fill="none" stroke={INK} strokeWidth={2.6} /></>;
+        const [px, py] = at(s0 - 9, 14);
+        upright.push(<text key={id()} x={px} y={py} textAnchor="middle" dominantBaseline="central" fontSize={14} fontWeight={600} fill={INK}>+</text>);
+      } else if (kind === 'BAT') {
+        body = <>{leads(s0, s1)}<line x1={s0} y1={-16} x2={s0} y2={16} stroke={INK} strokeWidth={2} /><line x1={s1} y1={-8} x2={s1} y2={8} stroke={INK} strokeWidth={4} /></>;
+        const [px, py] = at(s0 - 9, 16);
+        upright.push(<text key={id()} x={px} y={py} textAnchor="middle" dominantBaseline="central" fontSize={14} fontWeight={600} fill={INK}>+</text>);
+      } else if (kind === 'F') {
+        body = <>{leads(s0, s1)}<rect x={s0} y={-7} width={B} height={14} fill="white" stroke={INK} strokeWidth={SW} /><line x1={s0} y1={0} x2={s1} y2={0} stroke={INK} strokeWidth={1.6} /></>;
+      } else if (kind === 'XTAL') {
+        body = <>{leads(s0, s1)}<line x1={s0} y1={-13} x2={s0} y2={13} stroke={INK} strokeWidth={2.4} /><line x1={s1} y1={-13} x2={s1} y2={13} stroke={INK} strokeWidth={2.4} /><rect x={s0 + 5} y={-11} width={B - 10} height={22} fill="white" stroke={INK} strokeWidth={SW} /></>;
       } else if (kind === 'Z') {
         body = <>{leads(s0, s1)}<rect x={s0} y={-9} width={B} height={18} fill="white" stroke={INK} strokeWidth={SW} /></>;
       } else if (kind === 'SW') {
@@ -210,7 +234,7 @@ export default function Circuit({ source }: { source: string }) {
       touch(a); touch(b);
 
       const text = words.filter((w) => w !== 'closed').join(' ');
-      const bodyHalf = kind === 'C' ? 14 : kind === 'R' ? 8 : kind === 'Z' ? 9 : B / 2;
+      const bodyHalf = kind === 'C' || kind === 'CP' || kind === 'XTAL' ? 14 : kind === 'BAT' ? 16 : kind === 'LED' ? 16 : kind === 'R' || kind === 'F' ? 8 : kind === 'Z' ? 9 : B / 2;
       if (text) { const [mx, my] = at(c, 0); labels.push(besides(mx, my, nx, ny, text, INK, bodyHalf + 10)); }
       if (opts.v) {
         const off = bodyHalf + 12;
@@ -233,6 +257,14 @@ export default function Circuit({ source }: { source: string }) {
       continue;
     }
 
+    if (kind === 'VCC') {
+      // power-rail symbol: a short stub up to a bar, with the rail name above
+      const [p] = pts; const x = p[0] * U, y = p[1] * U;
+      shapes.push(<g key={id()} stroke={INK} strokeWidth={SW}><line x1={x} y1={y} x2={x} y2={y - 16} /><line x1={x - 12} y1={y - 16} x2={x + 12} y2={y - 16} /></g>);
+      if (label) labels.push(<SvgLabel key={id()} text={label} x={x} y={y - 27} anchor="middle" size={14} fill={INK} />);
+      touch(p); grow(x - 14, y - 36); grow(x + 14, y);
+      continue;
+    }
     if (kind === 'GND') {
       const [p] = pts; const x = p[0] * U, y = p[1] * U;
       shapes.push(<g key={id()} stroke={INK} strokeWidth={SW}><line x1={x} y1={y} x2={x} y2={y + 12} /><line x1={x - 13} y1={y + 12} x2={x + 13} y2={y + 12} /><line x1={x - 8} y1={y + 17} x2={x + 8} y2={y + 17} /><line x1={x - 3} y1={y + 22} x2={x + 3} y2={y + 22} /></g>);
