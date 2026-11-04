@@ -1,5 +1,5 @@
 import { Link, useParams } from 'react-router-dom';
-import { Award, BookOpen, CheckCircle2, Circle, ClipboardCheck, Clock, Lock, PlayCircle, Target } from 'lucide-react';
+import { Award, BadgeCheck, BookOpen, CheckCircle2, Circle, ClipboardCheck, Clock, Lock, PlayCircle, Target } from 'lucide-react';
 import { useApi, useTitle } from '../lib/hooks';
 import type { Catalog, CourseDetail } from '../lib/api';
 import { useAuth } from '../lib/auth';
@@ -12,7 +12,7 @@ export default function Course() {
   const { data: course, error, loading } = useApi<CourseDetail>(`/courses/${slug}`);
   const { data: catalog } = useApi<Catalog>('/catalog');
   const { user } = useAuth();
-  const { byCourse, best } = useProgress(!!user);
+  const { byCourse, best, isMastered } = useProgress(!!user);
   useTitle(course?.title ?? '');
 
   if (error?.status === 404) return <NotFound />;
@@ -22,6 +22,7 @@ export default function Course() {
   const firstUndone = course.units.flatMap((u) => u.lessons).find((l) => !done.has(l.id)) ?? course.units[0].lessons[0];
   const titleOf = (s: string) => catalog?.courses.find((c) => c.slug === s);
   const pct = Math.round((done.size / course.lessonCount) * 100);
+  const masteredCount = course.units.filter((_, ui) => isMastered(course.slug, ui + 1)).length;
 
   return (
     <>
@@ -38,6 +39,7 @@ export default function Course() {
             <span>{course.unitCount} units · {course.lessonCount} lessons</span>
             <span className="flex items-center gap-1.5"><Clock size={15} /> ~{course.hours} hours</span>
             {user && <span>{pct}% complete</span>}
+            {user && masteredCount > 0 && <span className="flex items-center gap-1.5 text-brand"><BadgeCheck size={15} /> {masteredCount} of {course.unitCount} units mastered</span>}
           </div>
           <Link to={`/courses/${course.slug}/lessons/${firstUndone.id}`} className="btn-brand mt-8">
             <PlayCircle size={18} /> {done.size ? 'Continue' : 'Start with lesson 1 — free'}
@@ -51,9 +53,17 @@ export default function Course() {
           <div className="mt-6 space-y-6">
             {course.units.map((u, ui) => (
               <div key={u.title} className="overflow-hidden rounded-2xl border border-slate-200">
-                <div className="border-b border-slate-200 bg-slate-50 px-5 py-3">
-                  <span className="font-mono text-xs font-semibold text-slate-500">UNIT {ui + 1}</span>
-                  <h3 className="font-bold text-ink">{u.title}</h3>
+                <div className={`flex items-center justify-between gap-3 border-b px-5 py-3 ${isMastered(course.slug, ui + 1) ? 'border-emerald-200 bg-emerald-50' : 'border-slate-200 bg-slate-50'}`}>
+                  <div className="min-w-0">
+                    <span className="font-mono text-xs font-semibold text-slate-500">UNIT {ui + 1}</span>
+                    <h3 className="font-bold text-ink">{u.title}</h3>
+                  </div>
+                  {user && (isMastered(course.slug, ui + 1) ? (
+                    <span className="flex shrink-0 items-center gap-1 rounded-full bg-emerald-600 px-2.5 py-1 text-xs font-semibold text-white"><BadgeCheck size={14} /> Mastered</span>
+                  ) : (() => {
+                    const n = u.lessons.filter((l) => done.has(l.id)).length;
+                    return n > 0 ? <span className="shrink-0 text-xs text-slate-500" title="Complete every lesson and pass the unit quiz to master this unit">{n}/{u.lessons.length} lessons</span> : null;
+                  })())}
                 </div>
                 <ul className="divide-y divide-slate-100">
                   {u.lessons.map((l) => {

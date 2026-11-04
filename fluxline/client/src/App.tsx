@@ -13,6 +13,7 @@ import NotFound from './pages/NotFound';
 import Contact from './pages/Contact';
 import Assessment from './pages/Assessment';
 import StudySheet from './pages/StudySheet';
+import Review from './pages/Review';
 import { ForgotPassword, ResetPassword } from './pages/PasswordPages';
 import { Privacy, Refunds, Terms } from './pages/Legal';
 
@@ -33,6 +34,7 @@ export default function App() {
         <Route path="login" element={<AuthPage mode="login" />} />
         <Route path="signup" element={<AuthPage mode="signup" />} />
         <Route path="dashboard" element={<Dashboard />} />
+        <Route path="review" element={<Review />} />
         <Route path="account" element={<Account />} />
         <Route path="forgot-password" element={<ForgotPassword />} />
         <Route path="reset-password" element={<ResetPassword />} />

@@ -1,35 +1,10 @@
 import { useState } from 'react';
 import { CheckCircle2, XCircle, Lightbulb } from 'lucide-react';
 import { InlineMd } from './Markdown';
+import { parseQuizBlock } from '../../../server/src/quizParse';
 
-interface Parsed {
-  prompt: string;
-  numeric?: { answer: number; tol: number; unit: string };
-  choices?: { text: string; correct: boolean }[];
-  explanation: string;
-}
-
-/** Parses the ```quiz block format used by lesson files. See README for the spec. */
-export function parseQuiz(src: string): Parsed {
-  const prompt: string[] = [];
-  const expl: string[] = [];
-  const choices: { text: string; correct: boolean }[] = [];
-  let numeric: Parsed['numeric'];
-  for (const raw of src.split('\n')) {
-    const line = raw.trim();
-    if (!line) continue;
-    const tag = line[0];
-    const rest = line.slice(1).trim();
-    if (tag === '?') prompt.push(rest);
-    else if (tag === '>') expl.push(rest);
-    else if (tag === '+' || tag === '-') choices.push({ text: rest, correct: tag === '+' });
-    else if (tag === '=') {
-      const [a, t, u] = rest.split('|').map((s) => s.trim());
-      numeric = { answer: Number(a), tol: Number(t || 0.01), unit: u || '' };
-    }
-  }
-  return { prompt: prompt.join(' '), numeric, choices: choices.length ? choices : undefined, explanation: expl.join(' ') };
-}
+/** Lessons use the same parser (and choice order) as the server-graded quizzes. */
+export const parseQuiz = parseQuizBlock;
 
 function parseNumber(input: string) {
   const s = input.trim().replace(/,/g, '').replace(/−/g, '-').replace(/\s+/g, '');

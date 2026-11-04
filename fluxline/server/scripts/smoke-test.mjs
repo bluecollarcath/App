@@ -109,6 +109,39 @@ await api('/api/progress', { method: 'POST', token, body: { course: 'pcb-design'
 const prog = await api('/api/progress', { token });
 ok(prog.data.completed.length === 1 && prog.data.assessments[0]?.best === 100, 'progress + best score recorded');
 
+console.log('Unit mastery');
+ok(!prog.data.mastered.some((m) => m.course_slug === 'pcb-design'), 'not mastered with only 1 lesson done');
+for (const l of ['1-1', '1-2', '1-3']) await api('/api/progress', { method: 'POST', token, body: { course: 'pcb-design', lesson: l } });
+let prog2 = await api('/api/progress', { token });
+ok(prog2.data.mastered.some((m) => m.course_slug === 'pcb-design' && m.unit === 1), 'unit 1 mastered: all lessons + quiz passed');
+await api('/api/progress', { method: 'POST', token, body: { course: 'pcb-design', lesson: '2-1' } });
+await api('/api/progress', { method: 'POST', token, body: { course: 'pcb-design', lesson: '2-2' } });
+await api('/api/progress', { method: 'POST', token, body: { course: 'pcb-design', lesson: '2-3' } });
+prog2 = await api('/api/progress', { token });
+ok(!prog2.data.mastered.some((m) => m.course_slug === 'pcb-design' && m.unit === 2), 'unit 2 not mastered until its quiz is passed');
+
+console.log('Mistakes review');
+ok((await api('/api/review', { token })).data.total === 0, 'no mistakes after a perfect quiz');
+const wrong = [...answers]; wrong[0] = 1; wrong[2] = 99;
+await api('/api/courses/pcb-design/assessments/unit-1/submit', { method: 'POST', token, body: { answers: wrong } });
+let rv = await api('/api/review', { token });
+ok(rv.data.total === 2 && rv.data.items.map((i) => i.index).join() === '0,2', 'two missed questions listed', JSON.stringify(rv.data).slice(0, 200));
+ok(!JSON.stringify(rv.data).includes('4700'), 'review list does not leak answers');
+const bad1 = await api('/api/review/check', { method: 'POST', token, body: { course: 'pcb-design', assessment: 'unit-1', index: 0, answer: 5 } });
+ok(bad1.data.correct === false && bad1.data.answer === undefined, 'wrong retry: no solution leaked');
+const rev = await api('/api/review/check', { method: 'POST', token, body: { course: 'pcb-design', assessment: 'unit-1', index: 0, reveal: true } });
+ok(rev.data.correct === false && rev.data.answer?.startsWith('4700'), 'show solution reveals answer');
+ok((await api('/api/review', { token })).data.total === 2, 'revealed question stays on the list');
+const good = await api('/api/review/check', { method: 'POST', token, body: { course: 'pcb-design', assessment: 'unit-1', index: 0, answer: '4,700' } });
+ok(good.data.correct === true && !!good.data.explanation, 'correct retry clears with explanation');
+rv = await api('/api/review', { token });
+ok(rv.data.total === 1 && rv.data.items[0].index === 2, 'cleared question leaves the list');
+await new Promise((r) => setTimeout(r, 10));
+await api('/api/courses/pcb-design/assessments/unit-1/submit', { method: 'POST', token, body: { answers: wrong } });
+ok((await api('/api/review', { token })).data.total === 2, 'missing it again on a retake brings it back');
+prog2 = await api('/api/progress', { token });
+ok(prog2.data.mastered.some((m) => m.course_slug === 'pcb-design' && m.unit === 1), 'mastery uses best score, so a weaker retake keeps it');
+
 console.log('Payment trouble & cancellation');
 await webhook('customer.subscription.updated', sub('sub_e2e1', 'cus_e2e1', 'past_due', uid, 'price_fm'));
 me = (await api('/api/me', { token })).data.user;
@@ -124,6 +157,7 @@ ok(!(await api('/api/me', { token })).data.user.subscribed, 'unpaid (retries exh
 await webhook('customer.subscription.deleted', sub('sub_e2e1', 'cus_e2e1', 'canceled', uid, 'price_fm'));
 me = (await api('/api/me', { token })).data.user;
 ok(!me.subscribed && me.status === 'canceled' && !me.cancelAtPeriodEnd, 'canceled -> access removed');
+ok((await api('/api/review', { token })).status === 402, 'review needs a subscription');
 ok((await api('/api/courses/pcb-design/lessons/2-1', { token })).status === 402, 'lesson locked again after cancel');
 
 console.log('Password reset');

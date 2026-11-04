@@ -48,6 +48,7 @@ export default function Layout() {
       <NavLink to="/curriculum" className={navCls} onClick={() => setOpen(false)}>Curriculum</NavLink>
       <NavLink to="/pricing" className={navCls} onClick={() => setOpen(false)}>Pricing</NavLink>
       {user && <NavLink to="/dashboard" className={navCls} onClick={() => setOpen(false)}>My learning</NavLink>}
+      {user?.subscribed && <NavLink to="/review" className={navCls} onClick={() => setOpen(false)}>Review</NavLink>}
     </>
   );
 

@@ -26,7 +26,35 @@ export function parseQuizBlock(src: string): QuizQuestion {
       numeric = { answer: Number(a), tol: Number(t || 0.01), unit: u || '' };
     }
   }
-  return { prompt: prompt.join(' '), numeric, choices: choices.length ? choices : undefined, explanation: expl.join(' ') };
+  const text = prompt.join(' ');
+  return { prompt: text, numeric, choices: choices.length ? shuffleChoices(choices, text) : undefined, explanation: expl.join(' ') };
+}
+
+/**
+ * Authors usually write the correct choice first. Show choices in a scrambled order instead,
+ * so "always pick A" doesn't work. The order is derived from the question text, so it is the
+ * same on every visit and for every student, and grading by choice index stays consistent
+ * between the browser and the server.
+ */
+function shuffleChoices<T extends { text: string }>(choices: T[], prompt: string): T[] {
+  let h = 2166136261;
+  for (const ch of prompt + '\u0000' + choices.map((c) => c.text).join('\u0000')) {
+    h ^= ch.charCodeAt(0);
+    h = Math.imul(h, 16777619) >>> 0;
+  }
+  const rand = () => { // mulberry32
+    h = (h + 0x6d2b79f5) >>> 0;
+    let t = h;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+  const out = [...choices];
+  for (let i = out.length - 1; i > 0; i--) {
+    const j = Math.floor(rand() * (i + 1));
+    [out[i], out[j]] = [out[j], out[i]];
+  }
+  return out;
 }
 
 /** Splits an assessment file into its intro text and its questions. */

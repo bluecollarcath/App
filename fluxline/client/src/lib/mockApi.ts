@@ -1,7 +1,7 @@
 // In-browser stand-in for the Ohmentum server, used only by the preview build (VITE_PREVIEW=1).
 // Mirrors server/src/index.ts. Accounts, subscription and progress live in this browser only.
 import { COURSES, STAGES, getCourse, isFreeLesson, lessonExists, totalLessons, type CourseDef } from '../../../server/src/catalog';
-import { grade, parseAssessment, PASS_PERCENT, publicQuestion } from '../../../server/src/quizParse';
+import { grade, isCorrect, parseAssessment, PASS_PERCENT, publicQuestion } from '../../../server/src/quizParse';
 
 const files = import.meta.glob('../../../server/content/lessons/**/*.md', { query: '?raw', import: 'default', eager: true }) as Record<string, string>;
 const lessons: Record<string, string> = {};
@@ -31,7 +31,7 @@ function assessmentIndex(c: CourseDef) {
 }
 const assessmentTitle = (c: CourseDef, id: string) => (id === 'final' ? `${c.code} Final Exam` : `Unit ${id.slice(5)} Quiz: ${c.units[Number(id.slice(5)) - 1]?.title ?? ''}`);
 
-interface MockUser { id: number; email: string; name: string; password: string; plan: string | null; status: string | null; periodEnd: number | null; progress: { course_slug: string; lesson_id: string; completed_at: string }[]; attempts?: { course_slug: string; assessment_id: string; percent: number }[] }
+interface MockUser { id: number; email: string; name: string; password: string; plan: string | null; status: string | null; periodEnd: number | null; progress: { course_slug: string; lesson_id: string; completed_at: string }[]; attempts?: { course_slug: string; assessment_id: string; percent: number; answers?: unknown[]; at?: string }[]; cleared?: Record<string, string> }
 interface Store { users: MockUser[] }
 
 const KEY = 'ohmentum.preview';
@@ -138,8 +138,9 @@ export async function mockApi(path: string, method: string, body: Record<string,
     const meta = { course: { slug: c.slug, code: c.code, title: c.title }, id, kind: id === 'final' ? 'final' : 'unit', title: assessmentTitle(c, id), questionCount: a.questions.length, passPercent: PASS_PERCENT };
     if (user?.status !== 'active') { const b = { ...meta, locked: true, error: 'Subscribe to take quizzes and exams.' }; throw new MockError(user ? 402 : 401, b.error, b); }
     if (!m[3]) return { ...meta, locked: false, intro: a.intro, questions: a.questions.map(publicQuestion), ...summarize(user) };
-    const result = grade(a.questions, Array.isArray(body?.answers) ? body!.answers as unknown[] : []);
-    (user.attempts ??= []).push({ course_slug: c.slug, assessment_id: id, percent: result.percent }); save(store);
+    const given = Array.isArray(body?.answers) ? body!.answers as unknown[] : [];
+    const result = grade(a.questions, given);
+    (user.attempts ??= []).push({ course_slug: c.slug, assessment_id: id, percent: result.percent, answers: given, at: new Date().toISOString() }); save(store);
     const s = summarize(user);
     return { ...result, best: s.best, attempts: s.attempts };
   }
@@ -150,7 +151,43 @@ export async function mockApi(path: string, method: string, body: Record<string,
       const k = `${x.course_slug}/${x.assessment_id}`; const g = groups.get(k) ?? { course_slug: x.course_slug, assessment_id: x.assessment_id, best: 0, attempts: 0 };
       g.best = Math.max(g.best, x.percent); g.attempts++; groups.set(k, g);
     }
-    return { completed: [...u.progress].reverse(), assessments: [...groups.values()] };
+    const done = new Set(u.progress.map((r) => `${r.course_slug}/${r.lesson_id}`));
+    const mastered: { course_slug: string; unit: number }[] = [];
+    for (const c of COURSES) c.units.forEach((un, ui) => {
+      const unit = ui + 1;
+      if (!un.lessons.every((_, li) => done.has(`${c.slug}/${unit}-${li + 1}`))) return;
+      if (assessments[`${c.slug}/unit-${unit}`] && (groups.get(`${c.slug}/unit-${unit}`)?.best ?? 0) < PASS_PERCENT) return;
+      mastered.push({ course_slug: c.slug, unit });
+    });
+    return { completed: [...u.progress].reverse(), assessments: [...groups.values()], mastered };
+  }
+  if (p === '/review' && method === 'GET') {
+    const u = need();
+    if (u.status !== 'active') throw new MockError(402, 'Subscribe to take quizzes and review your mistakes.');
+    const latest = new Map<string, NonNullable<MockUser['attempts']>[number]>();
+    for (const x of u.attempts ?? []) latest.set(`${x.course_slug}/${x.assessment_id}`, x);
+    const items = [];
+    for (const x of latest.values()) {
+      const c = getCourse(x.course_slug); const a = assessments[`${x.course_slug}/${x.assessment_id}`];
+      if (!c || !a || !x.answers) continue;
+      for (const [i, q] of a.questions.entries()) {
+        if (isCorrect(q, x.answers[i] ?? null)) continue;
+        const cl = u.cleared?.[`${x.course_slug}/${x.assessment_id}/${i}`];
+        if (cl && x.at && cl >= x.at) continue;
+        items.push({ course: { slug: c.slug, code: c.code, title: c.title }, assessmentId: x.assessment_id, assessmentTitle: assessmentTitle(c, x.assessment_id), index: i, missedAt: x.at ?? '', question: publicQuestion(q) });
+      }
+    }
+    return { items, total: items.length };
+  }
+  if (p === '/review/check') {
+    const u = need();
+    const a = assessments[`${String(body?.course)}/${String(body?.assessment)}`]; const q = a?.questions[Number(body?.index)];
+    if (!q) throw new MockError(404, 'Question not found.');
+    const reveal = body?.reveal === true;
+    const correct = !reveal && isCorrect(q, body?.answer);
+    if (correct) { (u.cleared ??= {})[`${String(body?.course)}/${String(body?.assessment)}/${Number(body?.index)}`] = new Date().toISOString(); save(store); }
+    const sol = grade([q], [null]).results[0];
+    return correct || reveal ? { correct, answer: sol.answer, explanation: sol.explanation } : { correct: false };
   }
   if (p === '/progress') {
     const u = need(); const { course, lesson, completed } = body ?? {};

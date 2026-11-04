@@ -66,6 +66,15 @@ function schema(idCol: string, bigint: string) {
       created_at TEXT NOT NULL
     )`,
     `CREATE INDEX IF NOT EXISTS assessment_attempts_user ON assessment_attempts (user_id, course_slug)`,
+    // Quiz questions a student has since answered correctly on the review page.
+    `CREATE TABLE IF NOT EXISTS review_cleared (
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      course_slug TEXT NOT NULL,
+      assessment_id TEXT NOT NULL,
+      q_index INTEGER NOT NULL,
+      cleared_at TEXT NOT NULL,
+      PRIMARY KEY (user_id, course_slug, assessment_id, q_index)
+    )`,
     `CREATE TABLE IF NOT EXISTS contact_messages (
       id ${idCol},
       name TEXT NOT NULL,

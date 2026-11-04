@@ -61,6 +61,19 @@ Scores are saved (best score and attempt count are shown on the course page), 70
 quizzes are for subscribers and owner accounts. Quiz files are loaded when the server starts,
 so restart (redeploy) after adding one.
 
+### Mistakes review and unit mastery
+
+- **Review** (`/review`, subscribers): every question missed on a student's latest attempt of
+  each quiz or exam. They re-answer it there; a correct answer clears it, "Show solution" reveals
+  the answer but keeps it on the list, and missing it again on a retake brings it back. Cleared
+  questions are stored in the `review_cleared` table, keyed by the question's position in the
+  quiz file, so add new questions at the end of a quiz file rather than in the middle.
+- **Unit mastery**: a unit is mastered when every lesson in it is marked complete and its unit
+  quiz is passed. Shown on the course page and the dashboard.
+- Multiple-choice options are shown in a fixed, scrambled order derived from the question text
+  (`shuffleChoices` in `server/src/quizParse.ts`), so authors can keep writing the correct
+  choice first.
+
 ### Unit study sheets
 
 Each unit can have a one-to-two-page study sheet at

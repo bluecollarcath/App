@@ -14,7 +14,7 @@ import { billingMode, billingRouter, cancelSubscriptionNow, foundingStatus, stri
 import { COURSES, STAGES, getCourse, isFreeLesson, lessonExists, totalLessons } from './catalog.js';
 import { passwordChangedEmail, resetEmail, sendEmail, SUPPORT_EMAIL } from './email.js';
 import { assessmentIds, assessmentIndex, assessmentTitle, loadAssessment } from './assessments.js';
-import { grade, PASS_PERCENT, publicQuestion } from './quizParse.js';
+import { grade, isCorrect, PASS_PERCENT, publicQuestion } from './quizParse.js';
 import { htmlRenderer, robotsTxt, sitemapXml } from './seo.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -198,6 +198,7 @@ app.post('/api/account/delete', requireAuth, limits.password, async (req, res) =
   await db.run('UPDATE contact_messages SET user_id = NULL WHERE user_id = ?', [user.id]);
   await db.run('DELETE FROM progress WHERE user_id = ?', [user.id]);
   await db.run('DELETE FROM assessment_attempts WHERE user_id = ?', [user.id]);
+  await db.run('DELETE FROM review_cleared WHERE user_id = ?', [user.id]);
   await db.run('DELETE FROM password_resets WHERE user_id = ?', [user.id]);
   await db.run('DELETE FROM users WHERE id = ?', [user.id]);
   res.json({ ok: true });
@@ -338,11 +339,96 @@ app.post('/api/courses/:slug/assessments/:aid/submit', requireAuth, async (req, 
   res.json({ ...result, best: Number(mine?.best ?? result.percent), attempts: Number(mine?.attempts ?? 1) });
 });
 
+// ── Mistakes review ───────────────────────────────────
+// Every question missed on a student's latest attempt of each quiz/exam, until they answer it
+// correctly here (or get it right on a later attempt).
+async function mistakesFor(userId: number) {
+  const attempts = await db.all<{ course_slug: string; assessment_id: string; answers: string; created_at: string }>(
+    'SELECT course_slug, assessment_id, answers, created_at FROM assessment_attempts WHERE user_id = ? ORDER BY created_at ASC, id ASC', [userId]);
+  const latest = new Map<string, (typeof attempts)[number]>();
+  for (const a of attempts) latest.set(`${a.course_slug}/${a.assessment_id}`, a);
+  const cleared = await db.all<{ course_slug: string; assessment_id: string; q_index: number; cleared_at: string }>(
+    'SELECT course_slug, assessment_id, q_index, cleared_at FROM review_cleared WHERE user_id = ?', [userId]);
+  const clearedAt = new Map(cleared.map((c) => [`${c.course_slug}/${c.assessment_id}/${c.q_index}`, c.cleared_at]));
+  const items: {
+    course: { slug: string; code: string; title: string }; assessmentId: string; assessmentTitle: string;
+    index: number; missedAt: string; question: ReturnType<typeof publicQuestion>;
+  }[] = [];
+  for (const a of latest.values()) {
+    const course = getCourse(a.course_slug);
+    const quiz = course && loadAssessment(course, a.assessment_id);
+    if (!course || !quiz) continue;
+    let answers: unknown[] = [];
+    try { answers = JSON.parse(a.answers); } catch { /* treat as blank */ }
+    quiz.questions.forEach((q, i) => {
+      if (isCorrect(q, answers[i] ?? null)) return;
+      const c = clearedAt.get(`${a.course_slug}/${a.assessment_id}/${i}`);
+      if (c && c >= a.created_at) return;
+      items.push({
+        course: { slug: course.slug, code: course.code, title: course.title },
+        assessmentId: a.assessment_id, assessmentTitle: assessmentTitle(course, a.assessment_id),
+        index: i, missedAt: a.created_at, question: publicQuestion(q),
+      });
+    });
+  }
+  return items;
+}
+
+app.get('/api/review', requireAuth, async (req, res) => {
+  if (!isSubscribed(req.user)) return res.status(402).json({ error: 'Subscribe to take quizzes and review your mistakes.' });
+  const items = await mistakesFor(req.user!.id);
+  res.json({ items, total: items.length });
+});
+
+app.post('/api/review/check', requireAuth, async (req, res) => {
+  if (!isSubscribed(req.user)) return res.status(402).json({ error: 'Subscribe to take quizzes and review your mistakes.' });
+  const course = getCourse(str(req.body?.course, 100));
+  const aid = str(req.body?.assessment, 20);
+  const quiz = course && loadAssessment(course, aid);
+  const index = Number(req.body?.index);
+  const q = quiz && Number.isInteger(index) ? quiz.questions[index] : undefined;
+  if (!course || !q) return res.status(404).json({ error: 'Question not found.' });
+  const reveal = req.body?.reveal === true;
+  const answer = typeof req.body?.answer === 'number' ? req.body.answer : str(req.body?.answer, 60);
+  const correct = !reveal && isCorrect(q, answer);
+  if (correct) {
+    await db.run(
+      'INSERT INTO review_cleared (user_id, course_slug, assessment_id, q_index, cleared_at) VALUES (?,?,?,?,?) ON CONFLICT (user_id, course_slug, assessment_id, q_index) DO UPDATE SET cleared_at = excluded.cleared_at',
+      [req.user!.id, course.slug, aid, index, now()]);
+  }
+  const solution = grade([q], [null]).results[0];
+  // The solution is shown after a correct answer, or when the student asks to see it.
+  res.json(correct || reveal ? { correct, answer: solution.answer, explanation: solution.explanation } : { correct: false });
+});
+
 // ── Progress ──────────────────────────────────────────
+/**
+ * A unit is "mastered" when every lesson in it is marked complete and its unit quiz (if the
+ * unit has one) has been passed.
+ */
+function masteredUnits(rows: { course_slug: string; lesson_id: string }[], attempts: { course_slug: string; assessment_id: string; best: number }[]) {
+  const done = new Set(rows.map((r) => `${r.course_slug}/${r.lesson_id}`));
+  const out: { course_slug: string; unit: number }[] = [];
+  for (const c of COURSES) {
+    if (!rows.some((r) => r.course_slug === c.slug)) continue;
+    c.units.forEach((u, ui) => {
+      const unit = ui + 1;
+      if (!u.lessons.every((_, li) => done.has(`${c.slug}/${unit}-${li + 1}`))) return;
+      const quizId = `unit-${unit}`;
+      if (assessmentsByCourse.get(c.slug)?.[quizId]) {
+        const best = attempts.find((a) => a.course_slug === c.slug && a.assessment_id === quizId)?.best ?? 0;
+        if (best < PASS_PERCENT) return;
+      }
+      out.push({ course_slug: c.slug, unit });
+    });
+  }
+  return out;
+}
+
 app.get('/api/progress', requireAuth, async (req, res) => {
-  const rows = await db.all('SELECT course_slug, lesson_id, completed_at FROM progress WHERE user_id=? ORDER BY completed_at DESC', [req.user!.id]);
+  const rows = await db.all<{ course_slug: string; lesson_id: string; completed_at: string }>('SELECT course_slug, lesson_id, completed_at FROM progress WHERE user_id=? ORDER BY completed_at DESC', [req.user!.id]);
   const assessments = (await attemptSummaries(req.user!.id)).map((r) => ({ ...r, best: Number(r.best), attempts: Number(r.attempts) }));
-  res.json({ completed: rows, assessments });
+  res.json({ completed: rows, assessments, mastered: masteredUnits(rows, assessments) });
 });
 
 app.post('/api/progress', requireAuth, async (req, res) => {
