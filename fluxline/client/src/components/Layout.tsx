@@ -58,7 +58,7 @@ export default function Layout() {
           Preview version: accounts and progress are saved only in this browser, and subscribing is simulated. No payment is taken.
         </div>
       )}
-      <header className="sticky top-0 z-40 border-b border-slate-800 bg-ink/95 backdrop-blur">
+      <header className="print:hidden sticky top-0 z-40 border-b border-slate-800 bg-ink/95 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
           <div className="flex items-center gap-8">
             <Logo light />
@@ -100,7 +100,7 @@ export default function Layout() {
         )}
       </header>
       {user?.status === 'past_due' && (
-        <div className="bg-amber-50 px-4 py-2 text-center text-sm text-amber-900 ring-1 ring-amber-200">
+        <div className="print:hidden bg-amber-50 px-4 py-2 text-center text-sm text-amber-900 ring-1 ring-amber-200">
           Your last payment didn't go through.{' '}
           <Link to="/account" className="font-semibold underline">Update your payment method</Link> to keep full access.
         </div>
@@ -108,7 +108,7 @@ export default function Layout() {
 
       <main className="flex-1"><Outlet /></main>
 
-      <footer className="bg-ink text-slate-400">
+      <footer className="print:hidden bg-ink text-slate-400">
         <div className="mx-auto grid max-w-7xl gap-10 px-4 py-14 sm:px-6 md:grid-cols-4">
           <div className="md:col-span-2">
             <Logo light />

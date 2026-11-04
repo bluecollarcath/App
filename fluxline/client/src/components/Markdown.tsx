@@ -4,6 +4,7 @@ import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import type { ReactNode } from 'react';
 import Quiz from './Quiz';
+import Recall from './Recall';
 import Circuit from './diagram/Circuit';
 import Plot from './diagram/Plot';
 
@@ -36,6 +37,7 @@ export default function Markdown({ source }: { source: string }) {
             if (lang === 'quiz') return <Quiz source={text} index={++quizCount} />;
             if (lang === 'circuit') return <Circuit source={text} />;
             if (lang === 'plot') return <Plot source={text} />;
+            if (lang === 'recall') return <Recall source={text} />;
             if (lang) return <pre><code>{text}</code></pre>;
             return <code>{children as ReactNode}</code>;
           },

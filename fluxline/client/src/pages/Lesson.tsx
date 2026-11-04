@@ -1,5 +1,5 @@
 import { Link, useParams } from 'react-router-dom';
-import { ArrowLeft, ArrowRight, CheckCircle2, Hammer, Lock } from 'lucide-react';
+import { ArrowLeft, ArrowRight, BookOpen, CheckCircle2, Hammer, Lock } from 'lucide-react';
 import { useApi, useTitle } from '../lib/hooks';
 import type { CourseDetail, LessonPayload } from '../lib/api';
 import { useAuth } from '../lib/auth';
@@ -107,6 +107,17 @@ export default function Lesson() {
               <CheckCircle2 size={16} /> {done ? 'Completed' : 'Mark complete'}
             </button>
           </div>
+        )}
+
+        {!lesson.locked && course?.notes?.includes(Number(u)) && Number(l) === course.units[Number(u) - 1]?.lessons.length && (
+          <Link to={`/courses/${lesson.course.slug}/notes/${u}`} className="mt-6 flex items-center gap-4 rounded-2xl bg-sky-50 p-5 ring-1 ring-sky-200 hover:bg-sky-100">
+            <BookOpen className="shrink-0 text-volt" />
+            <div className="min-w-0 flex-1">
+              <div className="font-semibold text-ink">End of Unit {u}: review it on one page</div>
+              <div className="text-sm text-slate-600">The unit study sheet: every formula and when to use it, the common traps, and a quick self-test before the quiz.</div>
+            </div>
+            <ArrowRight className="shrink-0 text-slate-400" />
+          </Link>
         )}
 
         <nav className="mt-8 grid gap-4 sm:grid-cols-2">

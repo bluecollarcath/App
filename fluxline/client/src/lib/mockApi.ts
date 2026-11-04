@@ -10,6 +10,14 @@ for (const [p, text] of Object.entries(files)) {
   if (m) lessons[`${m[1]}/${m[2]}`] = text;
 }
 
+const noteFiles = import.meta.glob('../../../server/content/notes/**/*.md', { query: '?raw', import: 'default', eager: true }) as Record<string, string>;
+const notes: Record<string, string> = {};
+for (const [p, text] of Object.entries(noteFiles)) {
+  const m = /notes\/([^/]+)\/unit-(\d+)\.md$/.exec(p);
+  if (m) notes[`${m[1]}/${m[2]}`] = text;
+}
+const notesFor = (c: CourseDef) => c.units.map((_, i) => i + 1).filter((n) => notes[`${c.slug}/${n}`]);
+
 const assessFiles = import.meta.glob('../../../server/content/assessments/**/*.md', { query: '?raw', import: 'default', eager: true }) as Record<string, string>;
 const assessments: Record<string, ReturnType<typeof parseAssessment>> = {};
 for (const [p, text] of Object.entries(assessFiles)) {
@@ -100,7 +108,7 @@ export async function mockApi(path: string, method: string, body: Record<string,
   }
   if ((m = /^\/courses\/([^/]+)$/.exec(p))) {
     const c = getCourse(m[1]); if (!c) throw new MockError(404, 'Course not found.');
-    return { ...summary(c.slug), outcomes: c.outcomes, assessments: assessmentIndex(c), units: c.units.map((u, ui) => ({ title: u.title, lessons: u.lessons.map(([title, topics], li) => { const id = `${ui + 1}-${li + 1}`; return { id, title, topics: topics.split(';').map((t) => t.trim()), free: isFreeLesson(id), written: !!lessons[`${c.slug}/${id}`] }; }) })) };
+    return { ...summary(c.slug), outcomes: c.outcomes, assessments: assessmentIndex(c), notes: notesFor(c), units: c.units.map((u, ui) => ({ title: u.title, lessons: u.lessons.map(([title, topics], li) => { const id = `${ui + 1}-${li + 1}`; return { id, title, topics: topics.split(';').map((t) => t.trim()), free: isFreeLesson(id), written: !!lessons[`${c.slug}/${id}`] }; }) })) };
   }
   if ((m = /^\/courses\/([^/]+)\/lessons\/([^/]+)$/.exec(p))) {
     const c = getCourse(m[1]); const found = c && lessonExists(c, m[2]);
@@ -111,6 +119,16 @@ export async function mockApi(path: string, method: string, body: Record<string,
     const meta = { course: { slug: c.slug, code: c.code, title: c.title }, id, unitTitle: found.unit.title, title: found.lesson[0], topics: found.lesson[1].split(';').map((t) => t.trim()), prev: flat[idx - 1] ?? null, next: flat[idx + 1] ?? null, free: isFreeLesson(id) };
     if (!isFreeLesson(id) && user?.status !== 'active') { const b = { ...meta, locked: true, error: 'Subscribe to unlock this lesson.' }; throw new MockError(user ? 402 : 401, b.error, b); }
     return { ...meta, locked: false, markdown: lessons[`${c.slug}/${id}`] ?? null };
+  }
+  if ((m = /^\/courses\/([^/]+)\/notes\/(\d+)$/.exec(p))) {
+    const c = getCourse(m[1]); const unit = Number(m[2]); const have = c ? notesFor(c) : [];
+    if (!c || !have.includes(unit)) throw new MockError(404, 'Study sheet not found.');
+    const u = c.units[unit - 1];
+    const meta = { course: { slug: c.slug, code: c.code, title: c.title }, unit, unitTitle: u.title, free: unit === 1,
+      lessons: u.lessons.map(([title], li) => ({ id: `${unit}-${li + 1}`, title })), hasQuiz: !!assessments[`${c.slug}/unit-${unit}`],
+      prevUnit: have.includes(unit - 1) ? unit - 1 : null, nextUnit: have.includes(unit + 1) ? unit + 1 : null };
+    if (unit !== 1 && user?.status !== 'active') { const b = { ...meta, locked: true, error: 'Subscribe to unlock every study sheet.' }; throw new MockError(user ? 402 : 401, b.error, b); }
+    return { ...meta, locked: false, markdown: notes[`${c.slug}/${unit}`] };
   }
   if ((m = /^\/courses\/([^/]+)\/assessments\/([^/]+)(\/submit)?$/.exec(p))) {
     const c = getCourse(m[1]); const a = c && assessments[`${c.slug}/${m[2]}`];

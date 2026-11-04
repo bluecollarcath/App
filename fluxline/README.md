@@ -61,6 +61,31 @@ Scores are saved (best score and attempt count are shown on the course page), 70
 quizzes are for subscribers and owner accounts. Quiz files are loaded when the server starts,
 so restart (redeploy) after adding one.
 
+### Unit study sheets
+
+Each unit can have a one-to-two-page study sheet at
+`server/content/notes/<course-slug>/unit-<n>.md`. The Unit 1 sheet of every course is free; the
+rest are for subscribers. Sheets appear on the course page, at the end of each unit's last
+lesson, and print cleanly ("Print or save PDF"). Keep every sheet to the same sections so
+students know where to look:
+
+1. **The big idea**: two or three sentences.
+2. **Must-know formulas**: a three-column table, `Formula | Use it when | Watch out`
+   (on phones each row becomes a card with those labels, so keep exactly three columns).
+3. **How to attack a problem**: the numbered solving recipe.
+4. **Traps that cost points**: bold name, then one line on the mistake and the fix.
+5. **Sanity checks**: quick ways to catch a wrong answer.
+6. **60-second self-test**: a `recall` block of click-to-reveal questions:
+
+````
+```recall
+Q: Question, with $math$ allowed.
+A: Answer, shown when the student clicks (always shown when printed).
+```
+````
+
+Aim for two printed pages at most; check with the print preview.
+
 ### Diagrams and graphs
 
 Lessons draw schematics and plots from short text blocks, so no image files are needed.

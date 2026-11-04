@@ -61,6 +61,17 @@ export function metaFor(pathname: string): PageMeta {
       };
     }
   }
+  m = /^\/courses\/([a-z0-9-]+)\/notes\/(\d+)$/.exec(p);
+  if (m) {
+    const c = getCourse(m[1]);
+    const u = c?.units[Number(m[2]) - 1];
+    if (c && u) return {
+      title: `Unit ${m[2]} Study Sheet: ${u.title} · ${c.title} · ${SITE}`,
+      description: clip(`A one-page study sheet for ${c.code} ${c.title}, unit ${m[2]}: the formulas and when to use them, a solving recipe, common traps, sanity checks and a quick self-test.`),
+      status: 200,
+      index: m[2] === '1',
+    };
+  }
   m = /^\/courses\/([a-z0-9-]+)\/assess\/([a-z0-9-]+)$/.exec(p);
   if (m) {
     const c = getCourse(m[1]);
@@ -103,12 +114,13 @@ export function robotsTxt(appUrl: string) {
   return ['User-agent: *', 'Allow: /', 'Disallow: /api/', 'Disallow: /account', 'Disallow: /dashboard', '', `Sitemap: ${appUrl}/sitemap.xml`, ''].join('\n');
 }
 
-export function sitemapXml(appUrl: string) {
+export function sitemapXml(appUrl: string, extraPaths: string[] = []) {
   const paths = [...Object.keys(STATIC)];
   for (const c of COURSES) {
     paths.push(`/courses/${c.slug}`);
     if (c.units[0]?.lessons[0]) paths.push(`/courses/${c.slug}/lessons/1-1`);
   }
+  paths.push(...extraPaths);
   const urls = paths.map((p) => `  <url><loc>${esc(appUrl + p)}</loc></url>`).join('\n');
   return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>\n`;
 }

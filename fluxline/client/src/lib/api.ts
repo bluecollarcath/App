@@ -37,6 +37,8 @@ export interface CourseDetail extends CourseSummary {
   outcomes: string[];
   /** Question counts for the quizzes/exam this course has, keyed by "unit-<n>" or "final". */
   assessments: Record<string, number>;
+  /** Units (1-based) that have a study sheet. */
+  notes?: number[];
   units: { title: string; lessons: LessonRef[] }[];
 }
 
@@ -128,4 +130,17 @@ export function planInfo(plan: string | null) {
   const key = plan.replace('founding-', '') as 'monthly' | 'annual';
   const p = (founding ? FOUNDING_PLANS : PLANS)[key];
   return p ? { ...p, founding } : null;
+}
+
+export interface NotesPayload {
+  course: { slug: string; code: string; title: string };
+  unit: number;
+  unitTitle: string;
+  free: boolean;
+  lessons: { id: string; title: string }[];
+  hasQuiz: boolean;
+  prevUnit: number | null;
+  nextUnit: number | null;
+  locked: boolean;
+  markdown?: string;
 }

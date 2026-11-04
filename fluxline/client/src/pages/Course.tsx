@@ -1,5 +1,5 @@
 import { Link, useParams } from 'react-router-dom';
-import { Award, CheckCircle2, Circle, ClipboardCheck, Clock, Lock, PlayCircle, Target } from 'lucide-react';
+import { Award, BookOpen, CheckCircle2, Circle, ClipboardCheck, Clock, Lock, PlayCircle, Target } from 'lucide-react';
 import { useApi, useTitle } from '../lib/hooks';
 import type { Catalog, CourseDetail } from '../lib/api';
 import { useAuth } from '../lib/auth';
@@ -77,6 +77,18 @@ export default function Course() {
                       </li>
                     );
                   })}
+                  {course.notes?.includes(ui + 1) && (
+                    <li>
+                      <Link to={`/courses/${course.slug}/notes/${ui + 1}`} className="flex items-center gap-3 px-5 py-3.5 hover:bg-slate-50">
+                        <BookOpen className="shrink-0 text-volt" size={20} />
+                        <div className="min-w-0 flex-1">
+                          <span className="font-medium text-ink">Unit {ui + 1} study sheet</span>
+                          <span className="ml-2 text-sm text-slate-500">formulas, traps & self-test on one page</span>
+                        </div>
+                        {ui === 0 ? <span className="shrink-0 rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">Free</span> : !user?.subscribed && <Lock className="shrink-0 text-slate-400" size={16} />}
+                      </Link>
+                    </li>
+                  )}
                   {course.assessments?.[`unit-${ui + 1}`] && (() => {
                     const id = `unit-${ui + 1}`;
                     const b = best(course.slug, id);

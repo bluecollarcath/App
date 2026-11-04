@@ -19,6 +19,7 @@ import { htmlRenderer, robotsTxt, sitemapXml } from './seo.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const CONTENT_DIR = path.resolve(here, '../content/lessons');
+const NOTES_DIR = path.resolve(here, '../content/notes');
 const CLIENT_DIST = path.resolve(here, '../../client/dist');
 const APP_URL = (process.env.APP_URL || 'http://localhost:5173').replace(/\/$/, '');
 const PROD = process.env.NODE_ENV === 'production';
@@ -40,6 +41,10 @@ for (const c of COURSES) {
 
 const assessmentsByCourse = new Map(COURSES.map((c) => [c.slug, assessmentIndex(c)]));
 
+// Unit study sheets: content/notes/<course>/unit-<n>.md. Unit 1's sheet is a free sample.
+const notesFile = (slug: string, unit: number) => path.join(NOTES_DIR, slug, `unit-${unit}.md`);
+const notesByCourse = new Map(COURSES.map((c) => [c.slug, c.units.map((_, i) => i + 1).filter((n) => fs.existsSync(notesFile(c.slug, n)))]));
+
 function courseSummary(slug: string) {
   const c = getCourse(slug)!;
   return {
@@ -53,6 +58,7 @@ function courseDetail(slug: string) {
     ...courseSummary(slug),
     outcomes: c.outcomes,
     assessments: assessmentsByCourse.get(slug) ?? {},
+    notes: notesByCourse.get(slug) ?? [],
     units: c.units.map((u, ui) => ({
       title: u.title,
       lessons: u.lessons.map(([title, topics], li) => {
@@ -274,6 +280,23 @@ app.get('/api/courses/:slug/lessons/:id', (req, res) => {
   res.json({ ...meta, locked: false, markdown });
 });
 
+app.get('/api/courses/:slug/notes/:unit', (req, res) => {
+  const course = getCourse(req.params.slug);
+  const unit = Number(/^\d+$/.exec(req.params.unit)?.[0]);
+  if (!course || !notesByCourse.get(course.slug)?.includes(unit)) return res.status(404).json({ error: 'Study sheet not found.' });
+  const u = course.units[unit - 1];
+  const meta = {
+    course: { slug: course.slug, code: course.code, title: course.title },
+    unit, unitTitle: u.title, free: unit === 1,
+    lessons: u.lessons.map(([title], li) => ({ id: `${unit}-${li + 1}`, title })),
+    hasQuiz: !!assessmentsByCourse.get(course.slug)?.[`unit-${unit}`],
+    prevUnit: notesByCourse.get(course.slug)!.includes(unit - 1) ? unit - 1 : null,
+    nextUnit: notesByCourse.get(course.slug)!.includes(unit + 1) ? unit + 1 : null,
+  };
+  if (unit !== 1 && !isSubscribed(req.user)) return res.status(req.user ? 402 : 401).json({ ...meta, locked: true, error: 'Subscribe to unlock every study sheet.' });
+  res.json({ ...meta, locked: false, markdown: fs.readFileSync(notesFile(course.slug, unit), 'utf8') });
+});
+
 // ── Quizzes & exams ───────────────────────────────────
 interface AttemptSummary { course_slug: string; assessment_id: string; best: number; attempts: number }
 async function attemptSummaries(userId: number, course?: string) {
@@ -336,7 +359,7 @@ app.use('/api', (_req, res) => res.status(404).json({ error: 'Not found' }));
 
 // ── Serve the built client in production ──────────────
 app.get('/robots.txt', (_req, res) => res.type('text/plain').send(robotsTxt(APP_URL)));
-app.get('/sitemap.xml', (_req, res) => res.type('application/xml').send(sitemapXml(APP_URL)));
+app.get('/sitemap.xml', (_req, res) => res.type('application/xml').send(sitemapXml(APP_URL, [...notesByCourse].filter(([, u]) => u.includes(1)).map(([slug]) => `/courses/${slug}/notes/1`))));
 if (fs.existsSync(CLIENT_DIST)) {
   app.use(express.static(CLIENT_DIST, { index: false, maxAge: '1h' }));
   // Every page is the same app, but the head tags (title, description, link previews) and the
