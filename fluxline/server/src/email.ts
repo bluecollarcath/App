@@ -2,13 +2,19 @@
 // Without RESEND_API_KEY, emails are printed to the server log instead of sent, so that
 // password reset and support forms can be tested locally.
 
-const API_KEY = process.env.RESEND_API_KEY;
-const FROM = process.env.EMAIL_FROM || 'Ohmentum <no-reply@example.com>';
-export const SUPPORT_EMAIL = process.env.SUPPORT_EMAIL || '';
+// Trim stray spaces/quotes pasted into the host's settings page.
+const env = (n: string) => process.env[n]?.trim().replace(/^(["'])(.*)\1$/, '$2').trim() || undefined;
+const API_KEY = env('RESEND_API_KEY');
+const FROM = env('EMAIL_FROM') || 'Ohmentum <no-reply@example.com>';
+export const SUPPORT_EMAIL = env('SUPPORT_EMAIL') || '';
 export const emailConfigured = !!API_KEY;
 
 if (!API_KEY && process.env.NODE_ENV === 'production') {
   console.warn('[email] RESEND_API_KEY is not set — password reset and support emails will NOT be delivered.');
+} else if (API_KEY) {
+  if (!env('EMAIL_FROM')) console.warn('[email] EMAIL_FROM is not set; emails will be rejected. Use e.g. Ohmentum <no-reply@yourdomain.com>.');
+  if (!SUPPORT_EMAIL) console.warn('[email] SUPPORT_EMAIL is not set; contact-form messages and error reports will only be saved, not emailed.');
+  console.log(`[email] Sending as ${FROM}${SUPPORT_EMAIL ? '; support messages go to the SUPPORT_EMAIL inbox' : ''}.`);
 }
 
 export interface Mail {
