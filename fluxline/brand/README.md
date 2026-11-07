@@ -32,4 +32,4 @@
 | `front-preview.png`, `back-preview.png` | 300 dpi previews (with bleed) for checking or sharing. |
 | `source.html` | Editable source; print it to PDF from Chrome at 3.75 × 2.25 in with background graphics on, or ask to have it regenerated. |
 
-The QR code on the back opens https://www.ohmentum.com. Order on thick matte stock (16 pt or heavier) for the dark front.
+Both sides use the dark brand background. The back lists the plans (Free, $29/mo, $249/yr) and the Founding Member offer "while spots last"; if prices change, regenerate the card. The QR code opens https://www.ohmentum.com. Order on thick matte stock (16 pt or heavier).
