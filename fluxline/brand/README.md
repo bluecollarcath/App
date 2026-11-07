@@ -33,3 +33,7 @@
 | `source.html` | Editable source; print it to PDF from Chrome at 3.75 × 2.25 in with background graphics on, or ask to have it regenerated. |
 
 Both sides use the dark brand background. The back lists the plans (Free, $29/mo, $249/yr) and the Founding Member offer "while spots last"; if prices change, regenerate the card. The QR code opens https://www.ohmentum.com. Order on thick matte stock (16 pt or heavier).
+
+## Apple Wallet card (`apple-wallet/`)
+
+Images in Apple Wallet sizes, `pass.json`, a preview, and instructions (`apple-wallet/README.md`) for adding the Ohmentum card to Apple Wallet.

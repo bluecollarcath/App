@@ -1,0 +1,37 @@
+{
+  "formatVersion": 1,
+  "passTypeIdentifier": "pass.com.ohmentum.card",
+  "teamIdentifier": "YOUR_APPLE_TEAM_ID",
+  "serialNumber": "ohmentum-card-001",
+  "organizationName": "Ohmentum",
+  "description": "Ohmentum card: college-level electrical engineering online",
+  "foregroundColor": "rgb(255, 255, 255)",
+  "backgroundColor": "rgb(7, 20, 14)",
+  "labelColor": "rgb(58, 232, 150)",
+  "sharingProhibited": false,
+  "barcodes": [
+    {
+      "format": "PKBarcodeFormatQR",
+      "message": "https://www.ohmentum.com",
+      "messageEncoding": "iso-8859-1",
+      "altText": "www.ohmentum.com"
+    }
+  ],
+  "storeCard": {
+    "secondaryFields": [
+      { "key": "free", "label": "FREE", "value": "$0" },
+      { "key": "monthly", "label": "MONTHLY", "value": "$29/mo" },
+      { "key": "annual", "label": "ANNUAL", "value": "$249/yr" }
+    ],
+    "auxiliaryFields": [
+      { "key": "founding", "label": "FOUNDING MEMBER", "value": "$15/mo or $129/yr, while spots last" }
+    ],
+    "backFields": [
+      { "key": "website", "label": "Website", "value": "https://www.ohmentum.com" },
+      { "key": "about", "label": "About", "value": "A complete, college-level electrical engineering curriculum: 25 courses from circuits to power systems, RF and VLSI, with worked examples, auto-graded problems, quizzes, exams and study sheets." },
+      { "key": "plans", "label": "Plans", "value": "Free: the first lesson of every course.\nMonthly: $29/month, cancel anytime.\nAnnual: $249/year (save 28%).\nFounding Member: $15/month or $129/year, locked in while you stay subscribed, while spots last." },
+      { "key": "contact", "label": "Contact", "value": "https://www.ohmentum.com/contact" },
+      { "key": "note", "label": "Note", "value": "Ohmentum is an independent learning platform, not an accredited institution." }
+    ]
+  }
+}
