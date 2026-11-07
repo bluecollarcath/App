@@ -23,3 +23,13 @@
 **Colors:** background `#07140e`; gradient `#b6ffdc → #2fe592 → #0b9e5d`; text white.
 **Font:** Kanit Black Italic (free, Google Fonts) for the logo; Inter for everything else.
 **Don't:** stretch the logo, recolor the Ω orange, or place it on busy photos without the dark background.
+
+## Business card (`business-card/`)
+
+| File | Use it for |
+|---|---|
+| `ohmentum-business-card-print.pdf` | Upload to a printer. Standard US card, 3.5 × 2 in trim, 0.125 in bleed (file is 3.75 × 2.25 in), 2 pages: front, back. |
+| `front-preview.png`, `back-preview.png` | 300 dpi previews (with bleed) for checking or sharing. |
+| `source.html` | Editable source; print it to PDF from Chrome at 3.75 × 2.25 in with background graphics on, or ask to have it regenerated. |
+
+The QR code on the back opens https://www.ohmentum.com. Order on thick matte stock (16 pt or heavier) for the dark front.
