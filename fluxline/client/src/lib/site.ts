@@ -8,9 +8,11 @@ export const SITE = {
   legalName: (env.VITE_LEGAL_NAME as string | undefined) || 'Ohmentum',
   /** e.g. "the State of Texas". Leave unset to use a general clause. */
   governingLaw: (env.VITE_GOVERNING_LAW as string | undefined) || '',
+  /** Where disputes are heard, e.g. "Jefferson County, Alabama". Leave unset to omit the clause. */
+  disputeVenue: (env.VITE_DISPUTE_VENUE as string | undefined) || '',
   /** Mailing address shown in the Privacy Policy (optional). */
   postalAddress: (env.VITE_POSTAL_ADDRESS as string | undefined) || '',
   /** Date the current legal pages took effect. Update it whenever you change them. */
-  legalEffectiveDate: 'November 3, 2026',
+  legalEffectiveDate: 'November 7, 2026',
   refundWindowDays: 14,
 };

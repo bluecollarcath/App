@@ -201,7 +201,7 @@ payment so you can try the full experience. Demo billing is always off when
    contact messages and error reports go). Without these, reset emails are only printed to the
    server log.
 5. **Legal pages:** set `VITE_LEGAL_NAME` (e.g. `Ohmentum LLC`), `VITE_GOVERNING_LAW` (e.g.
-   `the State of Texas`), and optionally `VITE_POSTAL_ADDRESS`, then redeploy. Have a lawyer
+   `the State of Texas`), `VITE_DISPUTE_VENUE` (e.g. `Jefferson County, Alabama`; adds a courts clause), and optionally `VITE_POSTAL_ADDRESS`, then redeploy. Have a lawyer
    review the Terms, Privacy, and Refund pages (`client/src/pages/Legal.tsx`) before launch; the
    refund window is `refundWindowDays` in `client/src/lib/site.ts`.
 6. **Stripe:** see below. Also turn on **Settings → Billing → Subscriptions and emails → Send

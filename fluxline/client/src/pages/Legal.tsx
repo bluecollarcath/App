@@ -47,13 +47,14 @@ export function Terms() {
       </ul>
 
       <h2>4. Your license to the content</h2>
-      <p>All lessons, problems, solutions, text, graphics, and software on the Service are owned by {SITE.legalName} or its licensors and are protected by copyright. While your account is in good standing, we grant you a personal, non-transferable, non-exclusive license to access and use the content for your own, non-commercial learning. You may not copy, redistribute, resell, publish, or scrape the content, post solutions publicly, or use it to train machine-learning models, without our written permission. Short quotations for study notes or discussion are fine.</p>
+      <p>All lessons, problems, solutions, text, graphics, and software on the Service are owned by {SITE.legalName} or our licensors and are protected by copyright. While your account is in good standing, we grant you a personal, non-transferable, non-exclusive license to access and use the content for your own, non-commercial learning. You may not copy, redistribute, resell, publish, or scrape the content, post solutions publicly, or use it to train machine-learning models, without our written permission. Short quotations for study notes or discussion are fine.</p>
 
       <h2>5. Educational purpose and safety</h2>
       <ul>
         <li><strong>Not an accredited institution.</strong> {SITE.name} is an independent learning platform. Completing our courses does not earn academic credit, a degree, or a professional license, and we make no promise that it will satisfy any school's, employer's, or licensing board's requirements.</li>
         <li><strong>Not professional engineering advice.</strong> The content is for education. Don't rely on it as a substitute for the judgment of a licensed professional engineer, applicable codes and standards, or manufacturer documentation when designing, building, or certifying real systems.</li>
         <li><strong>Electrical safety.</strong> Electricity can cause serious injury, death, and fire. Any hands-on work you choose to do, including following lab or project instructions, is at your own risk. Never work on mains-voltage, high-energy, or utility equipment without proper training, supervision, and protective equipment, and follow all local laws and codes.</li>
+        <li><strong>Quizzes, scores, and badges.</strong> Quiz and exam scores, unit mastery, and other progress markers are for your own self-assessment. They are not certificates, grades, or credentials, and we don't issue transcripts.</li>
         <li><strong>Accuracy.</strong> We work hard to make lessons correct, but errors can happen. If you spot one, please use the "Report an error" button on the lesson.</li>
       </ul>
 
@@ -75,7 +76,8 @@ export function Terms() {
       <h2>11. Governing law</h2>
       <p>{SITE.governingLaw
         ? <>These Terms are governed by the laws of {SITE.governingLaw}, without regard to its conflict-of-laws rules.</>
-        : <>These Terms are governed by the laws of the jurisdiction in which {SITE.legalName} is established, without regard to its conflict-of-laws rules.</>} This doesn't take away any protection you have under the mandatory consumer laws of the place you live.</p>
+        : <>These Terms are governed by the laws of the jurisdiction in which {SITE.legalName} is established, without regard to its conflict-of-laws rules.</>}{SITE.disputeVenue && <> Any dispute that isn't resolved informally will be handled in the state or federal courts located in {SITE.disputeVenue}, and you and we consent to their jurisdiction, except that either of us may bring a claim in small-claims court where it qualifies.</>} This doesn't take away any protection you have under the mandatory consumer laws of the place you live, including any right to bring a claim where you live.</p>
+      <p>Before filing any claim, please contact us first through our {contact}. Most concerns can be resolved quickly and informally.</p>
 
       <h2>12. Contact</h2>
       <p>Questions about these Terms? Reach us through our {contact}.</p>
@@ -91,7 +93,7 @@ export function Privacy() {
       <h2>Information we collect</h2>
       <ul>
         <li><strong>Account information:</strong> your name, email address, and password. Passwords are stored only as a secure one-way hash; we can't see them.</li>
-        <li><strong>Learning activity:</strong> the lessons you mark complete, so we can show your progress.</li>
+        <li><strong>Learning activity:</strong> the lessons you mark complete, your answers and scores on unit quizzes and final exams, and the missed questions you clear in review, so we can show your progress and what to review.</li>
         <li><strong>Subscription information:</strong> your plan, its status, and renewal date. Payments are handled by Stripe, which collects your card details directly. We receive only a customer reference and subscription status, never your full card number.</li>
         <li><strong>Messages you send us:</strong> contact-form messages and lesson error reports, including the email address you give us.</li>
         <li><strong>Technical information:</strong> like most websites, our servers process your IP address and basic request details. We use these to keep the Service secure, for example to block repeated failed sign-in attempts, and to diagnose problems.</li>
@@ -103,7 +105,7 @@ export function Privacy() {
       <h2>How we use information</h2>
       <ul>
         <li>To provide the Service: your account, lessons, progress, and subscription.</li>
-        <li>To send service emails, such as password resets, security notices, and billing-related messages.</li>
+        <li>To send service emails, such as password resets, security notices, and billing-related messages. Our payment processor, Stripe, also sends payment receipts, renewal reminders, and notices about failed payments or expiring cards on our behalf.</li>
         <li>To answer your questions and fix errors you report.</li>
         <li>To protect the Service and our users from fraud and abuse.</li>
         <li>To meet legal, tax, and accounting obligations.</li>
@@ -112,10 +114,11 @@ export function Privacy() {
       <h2>Who we share it with</h2>
       <p>We share personal information only with service providers that help us run the Service, and only as needed for them to do so:</p>
       <ul>
-        <li><strong>Stripe</strong> processes payments and subscriptions.</li>
-        <li><strong>Our hosting provider</strong> runs the website and database.</li>
-        <li><strong>Our email provider</strong> delivers service emails.</li>
+        <li><strong>Stripe</strong> processes payments and subscriptions and sends billing emails (stripe.com/privacy).</li>
+        <li><strong>Render</strong> hosts the website and its database (render.com/privacy).</li>
+        <li><strong>Resend</strong> delivers our service emails, such as password resets (resend.com/legal/privacy-policy).</li>
       </ul>
+      <p>These providers are located in the United States and process information on our behalf under their own security and privacy commitments.</p>
       <p>We may also disclose information if required by law, or to protect the rights and safety of our users or others. If {SITE.name} is involved in a merger or sale, your information may be transferred as part of that transaction, under this policy's protections.</p>
 
       <h2>How long we keep it</h2>
