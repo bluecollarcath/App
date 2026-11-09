@@ -86,3 +86,13 @@ body { @apply bg-white text-slate-800 antialiased; }
   .study-sheet .my-6 { margin: 0.3em 0; }
   .study-sheet [role="list"] > * + * { margin-top: 0; }
 }
+
+/* Printed lessons and course summary notes */
+@media print {
+  .lesson-print .prose-ee, .summary-print .prose-ee { font-size: 10.5pt; line-height: 1.5; }
+  .lesson-print .prose-ee h2 { break-after: avoid; }
+  .lesson-print svg, .lesson-print figure, .lesson-print .table-wrap, .lesson-print .katex-display { break-inside: avoid; }
+  .lesson-print .table-wrap, .summary-print .table-wrap { overflow: visible !important; }
+  .summary-print .lesson-sum { break-inside: avoid; }
+  .summary-print .unit-sum h2 { break-after: avoid; }
+}

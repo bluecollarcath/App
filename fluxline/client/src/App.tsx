@@ -14,6 +14,7 @@ import Contact from './pages/Contact';
 import Assessment from './pages/Assessment';
 import StudySheet from './pages/StudySheet';
 import Review from './pages/Review';
+import CourseSummary from './pages/CourseSummary';
 import { ForgotPassword, ResetPassword } from './pages/PasswordPages';
 import { Privacy, Refunds, Terms } from './pages/Legal';
 
@@ -30,6 +31,7 @@ export default function App() {
         <Route path="courses/:slug/lessons/:lessonId" element={<Lesson />} />
         <Route path="courses/:slug/assess/:aid" element={<Assessment />} />
         <Route path="courses/:slug/notes/:unit" element={<StudySheet />} />
+        <Route path="courses/:slug/summary" element={<CourseSummary />} />
         <Route path="pricing" element={<Pricing />} />
         <Route path="login" element={<AuthPage mode="login" />} />
         <Route path="signup" element={<AuthPage mode="signup" />} />

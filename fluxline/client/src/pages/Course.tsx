@@ -1,5 +1,5 @@
 import { Link, useParams } from 'react-router-dom';
-import { Award, BadgeCheck, BookOpen, CheckCircle2, Circle, ClipboardCheck, Clock, Lock, PlayCircle, Target } from 'lucide-react';
+import { Award, BadgeCheck, BookOpen, NotebookText, CheckCircle2, Circle, ClipboardCheck, Clock, Lock, PlayCircle, Target } from 'lucide-react';
 import { useApi, useTitle } from '../lib/hooks';
 import type { Catalog, CourseDetail } from '../lib/api';
 import { useAuth } from '../lib/auth';
@@ -41,9 +41,14 @@ export default function Course() {
             {user && <span>{pct}% complete</span>}
             {user && masteredCount > 0 && <span className="flex items-center gap-1.5 text-brand"><BadgeCheck size={15} /> {masteredCount} of {course.unitCount} units mastered</span>}
           </div>
-          <Link to={`/courses/${course.slug}/lessons/${firstUndone.id}`} className="btn-brand mt-8">
-            <PlayCircle size={18} /> {done.size ? 'Continue' : 'Start with lesson 1 — free'}
-          </Link>
+          <div className="mt-8 flex flex-wrap items-center gap-3">
+            <Link to={`/courses/${course.slug}/lessons/${firstUndone.id}`} className="btn-brand">
+              <PlayCircle size={18} /> {done.size ? 'Continue' : 'Start with lesson 1 — free'}
+            </Link>
+            <Link to={`/courses/${course.slug}/summary`} className="inline-flex items-center gap-2 rounded-xl border border-white/20 px-4 py-3 text-sm font-semibold text-white hover:border-white/40">
+              <NotebookText size={17} /> Summary notes
+            </Link>
+          </div>
         </div>
       </section>
 
@@ -135,6 +140,13 @@ export default function Course() {
         </div>
 
         <aside className="space-y-6">
+          <Link to={`/courses/${course.slug}/summary`} className="flex items-center gap-3 rounded-2xl border border-slate-200 p-5 hover:border-slate-300">
+            <NotebookText className="shrink-0 text-volt" size={22} />
+            <div className="min-w-0">
+              <div className="font-bold text-ink">Course summary notes</div>
+              <div className="text-sm text-slate-500">Every lesson's key takeaways in one printable document.</div>
+            </div>
+          </Link>
           <div className="rounded-2xl border border-slate-200 p-5">
             <h3 className="flex items-center gap-2 font-bold text-ink"><Target size={18} className="text-brand-dark" /> Learning outcomes</h3>
             <ul className="mt-3 space-y-2 text-sm text-slate-600">

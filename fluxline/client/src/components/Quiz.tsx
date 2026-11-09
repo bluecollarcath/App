@@ -35,7 +35,7 @@ export default function Quiz({ source, index }: { source: string; index: number 
   };
 
   return (
-    <div className="not-prose my-6 rounded-2xl border border-slate-200 bg-slate-50/70 p-5 sm:p-6">
+    <div className="quiz-block not-prose my-6 rounded-2xl border border-slate-200 bg-slate-50/70 p-5 sm:p-6 print:my-3 print:break-inside-avoid print:rounded-lg print:p-3">
       <div className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-brand-dark">
         Problem {index}
       </div>
@@ -55,7 +55,7 @@ export default function Quiz({ source, index }: { source: string; index: number 
         </div>
       )}
 
-      <div className="mt-4 flex flex-wrap items-center gap-3">
+      <div className="mt-4 flex flex-wrap items-center gap-3 print:hidden">
         {q.numeric && (
           <div className="flex items-center overflow-hidden rounded-xl border border-slate-300 bg-white focus-within:border-volt">
             <input value={value} onChange={(e) => { setValue(e.target.value); setResult(null); }}
@@ -72,8 +72,15 @@ export default function Quiz({ source, index }: { source: string; index: number 
         {result === 'wrong' && <span className="flex items-center gap-1.5 text-sm font-semibold text-rose-600"><XCircle size={18} /> Not quite — try again</span>}
       </div>
 
+      {/* Printed notes always include the answer and explanation. */}
+      <div className="mt-3 hidden rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-[14px] leading-6 text-slate-700 print:block">
+        <span className="font-semibold text-ink">Answer: </span>
+        {q.numeric ? <>{q.numeric.answer} {q.numeric.unit}</> : <InlineMd text={q.choices?.find((c) => c.correct)?.text ?? ''} />}
+        {q.explanation && <div className="mt-1"><InlineMd text={q.explanation} /></div>}
+      </div>
+
       {showSolution && q.explanation && (
-        <div className="mt-4 flex gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-[15px] leading-7 text-slate-700">
+        <div className="mt-4 flex gap-3 print:hidden rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-[15px] leading-7 text-slate-700">
           <Lightbulb className="mt-1 shrink-0 text-brand-dark" size={18} />
           <div>
             {q.numeric && <div className="mb-1 font-semibold text-ink">Answer: {q.numeric.answer} {q.numeric.unit}</div>}

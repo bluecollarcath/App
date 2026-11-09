@@ -120,6 +120,16 @@ export async function mockApi(path: string, method: string, body: Record<string,
     if (!isFreeLesson(id) && user?.status !== 'active') { const b = { ...meta, locked: true, error: 'Subscribe to unlock this lesson.' }; throw new MockError(user ? 402 : 401, b.error, b); }
     return { ...meta, locked: false, markdown: lessons[`${c.slug}/${id}`] ?? null };
   }
+  if ((m = /^\/courses\/([^/]+)\/summary$/.exec(p))) {
+    const c = getCourse(m[1]); if (!c) throw new MockError(404, 'Course not found.');
+    const full = user?.status === 'active';
+    const take = (md: string) => /^## Key takeaways[^\n]*\n([\s\S]*?)(?=^## |(?![\s\S]))/m.exec(md)?.[1].trim() ?? null;
+    return { course: { slug: c.slug, code: c.code, title: c.title }, locked: !full,
+      units: c.units.map((u, ui) => ({ title: u.title, lessons: u.lessons.map(([title], li) => {
+        const id = `${ui + 1}-${li + 1}`; const open = full || isFreeLesson(id); const md = lessons[`${c.slug}/${id}`];
+        return { id, title, locked: !open, takeaways: open && md ? take(md) : null };
+      }) })) };
+  }
   if ((m = /^\/courses\/([^/]+)\/notes\/(\d+)$/.exec(p))) {
     const c = getCourse(m[1]); const unit = Number(m[2]); const have = c ? notesFor(c) : [];
     if (!c || !have.includes(unit)) throw new MockError(404, 'Study sheet not found.');

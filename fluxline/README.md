@@ -74,6 +74,14 @@ so restart (redeploy) after adding one.
   (`shuffleChoices` in `server/src/quizParse.ts`), so authors can keep writing the correct
   choice first.
 
+### Printable lessons and course summary notes
+
+- Every lesson has a **Print or save PDF** button. The printed version drops the site menus and
+  buttons and shows each practice problem's answer and explanation.
+- `/courses/<slug>/summary` collects every lesson's `## Key takeaways` section into one printable
+  page (linked from the top of each course page). Subscribers see every lesson; others see the
+  free first lesson as a sample. Keep a `## Key takeaways` section at the end of new lessons.
+
 ### Unit study sheets
 
 Each unit can have a one-to-two-page study sheet at

@@ -71,6 +71,9 @@ ok((await api('/api/courses/pcb-design/lessons/2-1')).status === 401, 'anonymous
 ok((await api('/api/courses/circuit-analysis-1/notes/1')).data.markdown?.includes('Must-know formulas'), 'unit 1 study sheet free (even anonymous)');
 const n2 = await api('/api/courses/circuit-analysis-1/notes/2', { token });
 ok(n2.status === 402 && n2.data.locked && !n2.data.markdown, 'unit 2 study sheet locked for free user');
+const sumFree = (await api('/api/courses/pcb-design/summary')).data;
+const sumLessons = sumFree.units.flatMap((u) => u.lessons);
+ok(sumFree.locked && sumLessons[0].takeaways && sumLessons.slice(1).every((l) => l.locked && !l.takeaways), 'summary notes: only the free lesson for non-subscribers');
 const qa = await api('/api/courses/pcb-design/assessments/unit-1', { token });
 ok(qa.status === 402 && !qa.data.questions, 'quiz locked for free user');
 
@@ -92,6 +95,8 @@ console.log('Subscriber access');
 const l21 = await api('/api/courses/pcb-design/lessons/2-1', { token });
 ok(l21.status === 200 && l21.data.markdown?.includes('What a board is made of'), 'lesson 2-1 unlocked');
 ok((await api('/api/courses/circuit-analysis-1/notes/2', { token })).data.markdown?.includes('Supernode'), 'study sheet unlocked for subscriber');
+const sumSub = (await api('/api/courses/pcb-design/summary', { token })).data;
+ok(!sumSub.locked && sumSub.units.flatMap((u) => u.lessons).every((l) => l.takeaways && l.takeaways.length > 40), 'summary notes: every lesson for subscribers');
 const quiz = await api('/api/courses/pcb-design/assessments/unit-1', { token });
 ok(quiz.status === 200 && quiz.data.questions.length === 9, 'quiz served (9 questions)');
 ok(!JSON.stringify(quiz.data.questions).includes('Active-low signals are asserted when low'), 'quiz explanations not leaked before submit');

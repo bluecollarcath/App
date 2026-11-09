@@ -1,5 +1,5 @@
 import { Link, useParams } from 'react-router-dom';
-import { ArrowLeft, ArrowRight, BookOpen, CheckCircle2, Hammer, Lock } from 'lucide-react';
+import { ArrowLeft, ArrowRight, BookOpen, CheckCircle2, Hammer, Lock, Printer } from 'lucide-react';
 import { useApi, useTitle } from '../lib/hooks';
 import type { CourseDetail, LessonPayload } from '../lib/api';
 import { useAuth } from '../lib/auth';
@@ -24,9 +24,9 @@ export default function Lesson() {
   const [u, l] = lesson.id.split('-');
 
   return (
-    <div className="mx-auto grid max-w-7xl gap-10 px-4 py-10 sm:px-6 lg:grid-cols-[280px_1fr]">
+    <div className="mx-auto grid max-w-7xl gap-10 px-4 py-10 sm:px-6 lg:grid-cols-[280px_1fr] print:block print:max-w-none print:p-0">
       {/* Outline */}
-      <aside className="hidden lg:block">
+      <aside className="hidden lg:block print:hidden">
         <div className="sticky top-24 max-h-[calc(100vh-8rem)] overflow-y-auto pr-2">
           <Link to={`/courses/${lesson.course.slug}`} className="font-mono text-xs font-semibold text-brand-dark hover:underline">{lesson.course.code}</Link>
           <div className="mt-1 font-bold text-ink">{lesson.course.title}</div>
@@ -53,7 +53,7 @@ export default function Lesson() {
         </div>
       </aside>
 
-      <article className="min-w-0 max-w-3xl">
+      <article className="lesson-print min-w-0 max-w-3xl print:max-w-none">
         <div className="text-sm text-slate-500">
           <Link to={`/courses/${lesson.course.slug}`} className="hover:text-ink">{lesson.course.code} · {lesson.course.title}</Link>
           <span className="mx-2">/</span>Unit {u}: {lesson.unitTitle}
@@ -61,9 +61,15 @@ export default function Lesson() {
         <h1 className="mt-2 text-3xl font-extrabold tracking-tight text-ink sm:text-4xl">
           <span className="mr-3 font-mono text-2xl text-slate-300">{u}.{l}</span>{lesson.title}
         </h1>
-        <div className="mt-4 flex flex-wrap gap-2">
-          {lesson.topics.map((t) => <span key={t} className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">{t}</span>)}
+        <div className="mt-4 flex flex-wrap items-center gap-2">
+          {lesson.topics.map((t) => <span key={t} className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600 print:hidden">{t}</span>)}
+          {!lesson.locked && lesson.markdown && (
+            <button type="button" onClick={() => window.print()} className="ml-auto flex items-center gap-1.5 rounded-full border border-slate-300 px-3 py-1 text-xs font-semibold text-slate-600 hover:border-slate-400 hover:text-ink print:hidden">
+              <Printer size={13} /> Print or save PDF
+            </button>
+          )}
         </div>
+        <p className="hidden text-xs text-slate-500 print:block">Ohmentum · www.ohmentum.com · Practice answers are included at each problem.</p>
 
         <div className="mt-8">
           {lesson.locked ? (
@@ -95,10 +101,10 @@ export default function Lesson() {
             For education only, not professional engineering advice. Electricity can cause serious injury, death and fire: never work on mains-voltage or high-energy circuits without proper training, supervision and protective equipment. See our <Link to="/terms" className="underline">Terms of Service</Link>.
           </p>
         )}
-        {!lesson.locked && lesson.markdown && <ReportError key={lesson.id} course={lesson.course.slug} lesson={lesson.id} />}
+        {!lesson.locked && lesson.markdown && <div className="print:hidden"><ReportError key={lesson.id} course={lesson.course.slug} lesson={lesson.id} /></div>}
 
         {!lesson.locked && user && (
-          <div className="mt-12 flex items-center justify-between rounded-2xl border border-slate-200 p-5">
+          <div className="mt-12 flex items-center justify-between rounded-2xl border border-slate-200 p-5 print:hidden">
             <div>
               <div className="font-semibold text-ink">{done ? 'Lesson complete' : 'Finished this lesson?'}</div>
               <div className="text-sm text-slate-500">Track your progress through the course.</div>
@@ -110,7 +116,7 @@ export default function Lesson() {
         )}
 
         {!lesson.locked && course?.notes?.includes(Number(u)) && Number(l) === course.units[Number(u) - 1]?.lessons.length && (
-          <Link to={`/courses/${lesson.course.slug}/notes/${u}`} className="mt-6 flex items-center gap-4 rounded-2xl bg-sky-50 p-5 ring-1 ring-sky-200 hover:bg-sky-100">
+          <Link to={`/courses/${lesson.course.slug}/notes/${u}`} className="mt-6 flex items-center gap-4 rounded-2xl bg-sky-50 p-5 ring-1 ring-sky-200 hover:bg-sky-100 print:hidden">
             <BookOpen className="shrink-0 text-volt" />
             <div className="min-w-0 flex-1">
               <div className="font-semibold text-ink">End of Unit {u}: review it on one page</div>
@@ -120,7 +126,7 @@ export default function Lesson() {
           </Link>
         )}
 
-        <nav className="mt-8 grid gap-4 sm:grid-cols-2">
+        <nav className="mt-8 grid gap-4 sm:grid-cols-2 print:hidden">
           {lesson.prev ? (
             <Link to={`/courses/${lesson.course.slug}/lessons/${lesson.prev.id}`} className="rounded-2xl border border-slate-200 p-4 hover:border-slate-300">
               <div className="flex items-center gap-1 text-xs text-slate-500"><ArrowLeft size={14} /> Previous</div>

@@ -298,6 +298,29 @@ app.get('/api/courses/:slug/notes/:unit', (req, res) => {
   res.json({ ...meta, locked: false, markdown: fs.readFileSync(notesFile(course.slug, unit), 'utf8') });
 });
 
+// Course summary notes: every lesson's "Key takeaways" section, in order. Subscribers see all of
+// them; everyone else sees the free first lesson's takeaways as a sample.
+function takeaways(markdown: string) {
+  const m = /^## Key takeaways[^\n]*\n([\s\S]*?)(?=^## |(?![\s\S]))/m.exec(markdown);
+  return m ? m[1].trim() : null;
+}
+app.get('/api/courses/:slug/summary', (req, res) => {
+  const course = getCourse(req.params.slug);
+  if (!course) return res.status(404).json({ error: 'Course not found.' });
+  const full = isSubscribed(req.user);
+  const units = course.units.map((u, ui) => ({
+    title: u.title,
+    lessons: u.lessons.map(([title], li) => {
+      const id = `${ui + 1}-${li + 1}`;
+      const open = full || isFreeLesson(id);
+      const file = lessonFile(course.slug, id);
+      const md = open && fs.existsSync(file) ? takeaways(fs.readFileSync(file, 'utf8')) : null;
+      return { id, title, locked: !open, takeaways: md };
+    }),
+  }));
+  res.json({ course: { slug: course.slug, code: course.code, title: course.title }, locked: !full, units });
+});
+
 // ── Quizzes & exams ───────────────────────────────────
 interface AttemptSummary { course_slug: string; assessment_id: string; best: number; attempts: number }
 async function attemptSummaries(userId: number, course?: string) {

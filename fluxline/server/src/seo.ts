@@ -61,6 +61,11 @@ export function metaFor(pathname: string): PageMeta {
       };
     }
   }
+  m = /^\/courses\/([a-z0-9-]+)\/summary$/.exec(p);
+  if (m) {
+    const c = getCourse(m[1]);
+    if (c) return { title: `Summary Notes · ${c.title} · ${SITE}`, description: clip(`The key takeaways from every lesson of ${c.code} ${c.title}, on one printable page.`), status: 200, index: false };
+  }
   m = /^\/courses\/([a-z0-9-]+)\/notes\/(\d+)$/.exec(p);
   if (m) {
     const c = getCourse(m[1]);
