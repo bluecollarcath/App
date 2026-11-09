@@ -1,16 +1,13 @@
 import { useState } from 'react';
 import { CheckCircle2, XCircle, Lightbulb } from 'lucide-react';
 import { InlineMd } from './Markdown';
-import { parseQuizBlock } from '../../../server/src/quizParse';
+import { parseNumberAnswer, parseQuizBlock } from '../../../server/src/quizParse';
 
 /** Lessons use the same parser (and choice order) as the server-graded quizzes. */
 export const parseQuiz = parseQuizBlock;
 
-function parseNumber(input: string) {
-  const s = input.trim().replace(/,/g, '').replace(/−/g, '-').replace(/\s+/g, '');
-  if (!s) return NaN;
-  return Number(s.replace(/[x×]10\^?/i, 'e'));
-}
+/** Same rules as server grading: decimals, fractions (3/4), mixed numbers (2 1/4), 3x10^5. */
+const parseNumber = (input: string) => parseNumberAnswer(input);
 
 export default function Quiz({ source, index }: { source: string; index: number }) {
   const q = parseQuiz(source);

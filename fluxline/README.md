@@ -3,7 +3,7 @@
 A subscription learning website that teaches a complete, college-level electrical engineering
 curriculum, sequenced like an ABET-accredited B.S.E.E. degree.
 
-- **25 courses · 260 lessons · 4 stages · 7 tracks**: Foundations (calculus, linear algebra,
+- **26 courses · 275 lessons · 4 stages · 7 tracks**: Foundations (precalculus, calculus, linear algebra,
   differential equations, E&M physics, programming), Core I (Circuits I & II, digital logic,
   signals & systems), Core II (microelectronics I & II, electromagnetics, probability,
   semiconductor devices, control, embedded systems, PCB design), Specialization (communications, DSP, power
@@ -23,8 +23,8 @@ curriculum, sequenced like an ABET-accredited B.S.E.E. degree.
 ## Content status
 
 The full catalog (every course, unit, lesson title, and topic list) is defined in
-`server/src/catalog.ts`. **All 260 lessons are written**, and all 25 courses are complete,
-each with unit quizzes and a final exam (2,300+ auto-graded questions in total). A catalog lesson
+`server/src/catalog.ts`. **All 275 lessons are written**, and all 26 courses are complete,
+each with unit quizzes and a final exam (2,500+ auto-graded questions in total). A catalog lesson
 without a content file shows its topic outline and an "in production" notice, so new lessons can
 be added to the catalog before they're written. To publish a lesson, add
 `server/content/lessons/<course-slug>/<unit>-<lesson>.md` (e.g. `circuit-analysis-1/1-4.md`) —

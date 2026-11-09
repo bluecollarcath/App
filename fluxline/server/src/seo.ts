@@ -12,7 +12,7 @@ import { assessmentTitle } from './assessments.js';
 
 const SITE = 'Ohmentum';
 const DEFAULT_TITLE = 'Ohmentum — Learn Electrical Engineering';
-const DEFAULT_DESC = 'A complete, college-level electrical engineering curriculum: 25 courses, from circuits to power systems, RF and VLSI, with worked examples and auto-graded problems.';
+const DEFAULT_DESC = 'A complete, college-level electrical engineering curriculum: 26 courses, from precalculus and circuits to power systems, RF and VLSI, with worked examples and auto-graded problems.';
 
 interface PageMeta { title: string; description: string; status: number; index: boolean }
 

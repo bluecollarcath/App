@@ -72,6 +72,11 @@ export function parseNumberAnswer(input: unknown): number {
   if (typeof input !== 'string') return NaN;
   const s = input.trim().replace(/,/g, '').replace(/[−–]/g, '-').replace(/\s+/g, '');
   if (!s) return NaN;
+  // Fractions such as 3/4, -11/12 or 1.5/2 (and mixed numbers like 2 1/4, written with a space).
+  const mixed = /^(-?)(\d+)\s+(\d+)\/(\d+)$/.exec(input.trim().replace(/[−–]/g, '-'));
+  if (mixed) { const v = Number(mixed[2]) + Number(mixed[3]) / Number(mixed[4]); return mixed[1] ? -v : v; }
+  const frac = /^(-?[\d.]+)\/(-?[\d.]+)$/.exec(s);
+  if (frac) return Number(frac[2]) === 0 ? NaN : Number(frac[1]) / Number(frac[2]);
   return Number(s.replace(/[x×*]10\^?/i, 'e'));
 }
 

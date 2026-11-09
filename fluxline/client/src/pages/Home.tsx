@@ -8,7 +8,7 @@ import CourseCard from '../components/CourseCard';
 
 const FAQ = [
   ['Is this really college-level?', 'Yes. The curriculum follows the sequence of an ABET-accredited B.S. in Electrical Engineering — the same topics, notation, and depth you would see in university lectures and textbooks, from calculus and circuit analysis through electromagnetics, control, DSP, and power systems.'],
-  ['What do I need to know before starting?', 'High-school algebra and trigonometry. The Foundations stage teaches the calculus, linear algebra, differential equations, and physics everything else depends on.'],
+  ['What do I need to know before starting?', 'Just basic arithmetic. If you never took (or don\'t remember) algebra, trigonometry or calculus, start with Precalculus: Math Foundations, which builds those skills from the ground up. The rest of the Foundations stage then teaches the calculus, linear algebra, differential equations, and physics everything else depends on.'],
   ['Do I get a degree?', 'No. Ohmentum is an independent learning platform, not an accredited institution. It is ideal for preparing for or supplementing a degree, reviewing for the FE exam, changing careers into hardware, or learning for its own sake.'],
   ['What can I try for free?', 'The first lesson of every course is free with an account, including all of its practice problems.'],
   ['Can I cancel anytime?', 'Yes. Manage or cancel your subscription from your account page; you keep access until the end of your billing period.'],

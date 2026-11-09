@@ -28,7 +28,7 @@
     ],
     "backFields": [
       { "key": "website", "label": "Website", "value": "https://www.ohmentum.com" },
-      { "key": "about", "label": "About", "value": "A complete, college-level electrical engineering curriculum: 25 courses from circuits to power systems, RF and VLSI, with worked examples, auto-graded problems, quizzes, exams and study sheets." },
+      { "key": "about", "label": "About", "value": "A complete, college-level electrical engineering curriculum: 26 courses from precalculus and circuits to power systems, RF and VLSI, with worked examples, auto-graded problems, quizzes, exams and study sheets." },
       { "key": "plans", "label": "Plans", "value": "Free: the first lesson of every course.\nMonthly: $29/month, cancel anytime.\nAnnual: $249/year (save 28%).\nFounding Member: $15/month or $129/year, locked in while you stay subscribed, while spots last." },
       { "key": "contact", "label": "Contact", "value": "https://www.ohmentum.com/contact" },
       { "key": "note", "label": "Note", "value": "Ohmentum is an independent learning platform, not an accredited institution." }

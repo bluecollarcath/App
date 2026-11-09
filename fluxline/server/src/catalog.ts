@@ -27,9 +27,42 @@ export const STAGES: Record<number, { name: string; blurb: string }> = {
 export const COURSES: CourseDef[] = [
   // ───────────────────────────── STAGE 1 ─────────────────────────────
   {
+    slug: 'precalculus', code: 'MATH 100', title: 'Precalculus: Math Foundations', stage: 1, track: 'Math & Science', hours: 35,
+    description: 'The starting point if you never took (or don\'t remember) algebra, trigonometry or calculus. Builds every math skill the rest of the curriculum relies on, from fractions and equations to functions, logarithms, trigonometry and sine waves, then gives you an intuitive first look at calculus. Every step is shown.',
+    prereqs: [],
+    outcomes: ['Work confidently with fractions, exponents, scientific notation and engineering prefixes', 'Solve equations and rearrange any formula for the quantity you need', 'Read, graph and combine functions, including lines, parabolas, exponentials and logarithms', 'Use trigonometry and describe sine waves by amplitude, frequency and phase', 'Explain what a rate of change and an accumulated total are, ready for calculus'],
+    units: [
+      { title: 'The Algebra Toolkit', lessons: [
+        ['Numbers, Fractions & Order of Operations', 'negative numbers; fractions; percentages; order of operations'],
+        ['Exponents, Roots & Scientific Notation', 'exponent rules; square roots; scientific notation; engineering prefixes'],
+        ['Solving Equations & Rearranging Formulas', 'variables; balancing equations; isolating a variable; Ohm\'s law'],
+        ['Factoring & Quadratic Equations', 'expanding; factoring; quadratic formula; checking answers'],
+      ] },
+      { title: 'Functions & Graphs', lessons: [
+        ['What Is a Function?', 'function notation; inputs and outputs; the coordinate plane; domain and range'],
+        ['Lines, Slope & Rates', 'slope; y = mx + b; rate of change with units; reading graphs'],
+        ['Systems of Linear Equations', 'substitution; elimination; two equations, two unknowns'],
+        ['Transforming & Combining Functions', 'shifts and stretches; composition; inverse functions'],
+      ] },
+      { title: 'Exponentials & Logarithms', lessons: [
+        ['Exponential Growth & Decay', 'growth factor; the number e; half-life; time constant'],
+        ['Logarithms', 'logs as inverse exponentials; log rules; natural log; solving for time; decibels'],
+      ] },
+      { title: 'Trigonometry', lessons: [
+        ['Angles, Radians & Right Triangles', 'Pythagorean theorem; sine, cosine, tangent; degrees and radians'],
+        ['The Unit Circle & Trig Functions', 'unit circle; sine and cosine as functions; key identities'],
+        ['Sine Waves: Amplitude, Frequency & Phase', 'A sin(ωt + φ); period; frequency; ω = 2πf'],
+      ] },
+      { title: 'A First Look at Calculus', lessons: [
+        ['Rates of Change & the Idea of a Limit', 'average rate of change; zooming in; instantaneous rate; limits'],
+        ['Accumulation & Area', 'adding up small pieces; area under a graph; distance from speed'],
+      ] },
+    ],
+  },
+  {
     slug: 'calculus-for-engineers', code: 'MATH 151', title: 'Calculus for Engineers', stage: 1, track: 'Math & Science', hours: 45,
     description: 'Single- and multivariable calculus taught through engineering applications: rates, accumulation, optimization, and the vector calculus that underpins electromagnetics.',
-    prereqs: [],
+    prereqs: ['precalculus'],
     outcomes: ['Differentiate and integrate elementary and composite functions', 'Model physical rates of change', 'Apply Taylor series to linearize systems', 'Evaluate line, surface, and volume integrals'],
     units: [
       { title: 'Limits & Derivatives', lessons: [

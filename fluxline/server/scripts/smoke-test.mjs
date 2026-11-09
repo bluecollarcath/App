@@ -110,6 +110,11 @@ quiz.data.questions.forEach((q, i) => {
 });
 const sb = await api('/api/courses/pcb-design/assessments/unit-1/submit', { method: 'POST', token, body: { answers } });
 ok(sb.status === 200 && sb.data.percent === 100, `quiz graded 100% (${sb.data.score}/${sb.data.total})`, JSON.stringify(sb.data).slice(0, 300));
+const pqQuiz = await api('/api/courses/precalculus/assessments/unit-1', { token });
+const pqAnswers = [13, -8, 14, '11/10', '3/2', 8, -3, 0.047, 6, 0.1, null, 5, 2];
+pqAnswers[10] = pqQuiz.data.questions[10].choices.findIndex((c) => c.includes('6x + 9'));
+const pq = await api('/api/courses/precalculus/assessments/unit-1/submit', { method: 'POST', token, body: { answers: pqAnswers } });
+ok(pq.data.percent === 100 && pq.data.results[3].correct && pq.data.results[4].correct, 'fraction answers (11/10, 3/2) graded correct; precalculus quiz 100%', JSON.stringify(pq.data).slice(0, 300));
 await api('/api/progress', { method: 'POST', token, body: { course: 'pcb-design', lesson: '2-1' } });
 const prog = await api('/api/progress', { token });
 ok(prog.data.completed.length === 1 && prog.data.assessments[0]?.best === 100, 'progress + best score recorded');
