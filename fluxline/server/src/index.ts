@@ -10,7 +10,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import db, { findUserByEmail, findUserById, isSubscribed, migrate, now, publicUser, type UserRow } from './db.js';
 import { optionalAuth, PASSWORD_RULE, requireAuth, signToken, validPassword } from './auth.js';
-import { billingMode, billingRouter, cancelSubscriptionNow, foundingStatus, stripeWebhook } from './billing.js';
+import { billingMode, billingRouter, cancelSubscriptionNow, foundingStatus, runBillingNotices, stripeWebhook } from './billing.js';
 import { COURSES, STAGES, getCourse, isFreeLesson, lessonExists, totalLessons } from './catalog.js';
 import { passwordChangedEmail, resetEmail, sendEmail, SUPPORT_EMAIL } from './email.js';
 import { assessmentIds, assessmentIndex, assessmentTitle, loadAssessment } from './assessments.js';
@@ -200,6 +200,9 @@ app.post('/api/account/delete', requireAuth, limits.password, async (req, res) =
   await db.run('DELETE FROM assessment_attempts WHERE user_id = ?', [user.id]);
   await db.run('DELETE FROM review_cleared WHERE user_id = ?', [user.id]);
   await db.run('DELETE FROM password_resets WHERE user_id = ?', [user.id]);
+  // Automatic-renewal consent records are kept 3 years as proof of consent, detached from the account.
+  await db.run('UPDATE subscription_consents SET user_id = NULL WHERE user_id = ?', [user.id]);
+  await db.run('DELETE FROM billing_notices WHERE user_id = ?', [user.id]);
   await db.run('DELETE FROM users WHERE id = ?', [user.id]);
   res.json({ ok: true });
 });
@@ -488,3 +491,16 @@ app.use((err: Error, _req: express.Request, res: express.Response, _next: expres
 const port = Number(process.env.PORT || 8787);
 await migrate();
 app.listen(port, () => console.log(`Ohmentum on http://localhost:${port} (db: ${db.kind}, billing: ${billingMode}, ${written.size} lessons written)`));
+
+// Renewal reminder emails: checked every few hours (and shortly after startup).
+if (billingMode !== 'disabled') {
+  const every = Math.max(10_000, Number(process.env.BILLING_JOB_INTERVAL_MS) || 6 * 3600_000);
+  const run = () => runBillingNotices().catch((err) => console.error('[billing] reminder job failed:', err));
+  setTimeout(run, Math.min(every, 60_000));
+  setInterval(run, every);
+  // Consent records older than 3 years (plus a margin) are no longer needed.
+  setInterval(() => {
+    const cutoff = new Date(Date.now() - 3.25 * 365 * 86400_000).toISOString();
+    db.run('DELETE FROM subscription_consents WHERE user_id IS NULL AND created_at < ?', [cutoff]).catch(() => {});
+  }, 24 * 3600_000);
+}

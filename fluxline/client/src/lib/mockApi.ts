@@ -2,6 +2,7 @@
 // Mirrors server/src/index.ts. Accounts, subscription and progress live in this browser only.
 import { COURSES, STAGES, getCourse, isFreeLesson, lessonExists, totalLessons, type CourseDef } from '../../../server/src/catalog';
 import { grade, isCorrect, parseAssessment, PASS_PERCENT, publicQuestion } from '../../../server/src/quizParse';
+import { renewalDisclosure } from '../../../server/src/pricing';
 
 const files = import.meta.glob('../../../server/content/lessons/**/*.md', { query: '?raw', import: 'default', eager: true }) as Record<string, string>;
 const lessons: Record<string, string> = {};
@@ -207,7 +208,9 @@ export async function mockApi(path: string, method: string, body: Record<string,
   }
   if (p === '/billing/checkout') {
     const u = need(); const interval = body?.plan === 'annual' ? 'annual' : 'monthly';
-    const plan = `founding-${interval}`;
+    const plan = `founding-${interval}` as const;
+    if (body?.consent !== true) throw new MockError(400, 'Please tick the box to agree to the automatic-renewal terms.');
+    if (body?.disclosure !== renewalDisclosure(plan)) throw new MockError(409, 'The plan terms have changed. Please review them and agree again.');
     u.plan = plan; u.status = 'active'; u.periodEnd = Math.floor(Date.now() / 1000) + (interval === 'annual' ? 365 : 30) * 86400;
     save(store); return { url: '/account?checkout=success&demo=1' };
   }

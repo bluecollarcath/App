@@ -105,7 +105,7 @@ export function Privacy() {
       <h2>How we use information</h2>
       <ul>
         <li>To provide the Service: your account, lessons, progress, and subscription.</li>
-        <li>To send service emails, such as password resets, security notices, and billing-related messages. Our payment processor, Stripe, also sends payment receipts, renewal reminders, and notices about failed payments or expiring cards on our behalf.</li>
+        <li>To send service emails, such as password resets, security notices, and billing-related messages such as your subscription confirmation and renewal reminders. Our payment processor, Stripe, also sends payment receipts and notices about failed payments or expiring cards on our behalf.</li>
         <li>To answer your questions and fix errors you report.</li>
         <li>To protect the Service and our users from fraud and abuse.</li>
         <li>To meet legal, tax, and accounting obligations.</li>
@@ -157,7 +157,7 @@ export function Refunds() {
       <p>If you're not satisfied, contact us within {days} days of your first payment for a plan, monthly or annual, and we'll refund that payment in full. No explanation needed. This applies once per customer.</p>
 
       <h2>Renewals</h2>
-      <p>Subscriptions renew automatically. Renewal payments aren't refundable, except where required by law or described below, so be sure to cancel before your renewal date if you don't want to continue. We'll email you a reminder before an annual plan renews.</p>
+      <p>Subscriptions renew automatically. Renewal payments aren't refundable, except where required by law or described below, so be sure to cancel before your renewal date if you don't want to continue. We'll email you a reminder about 30 days before an annual plan renews, and once a year on monthly plans.</p>
 
       <h2>Cancelling</h2>
       <p>You can cancel anytime from your <Link to="/account">account page</Link>. You'll keep full access until the end of the period you've paid for, and you won't be charged again.</p>

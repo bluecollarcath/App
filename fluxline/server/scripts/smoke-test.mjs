@@ -12,6 +12,7 @@
 //   STRIPE_PRICE_MONTHLY=price_m STRIPE_PRICE_ANNUAL=price_a \
 //   STRIPE_PRICE_FOUNDING_MONTHLY=price_fm STRIPE_PRICE_FOUNDING_ANNUAL=price_fa \
 //   FOUNDING_OFFER=true FOUNDING_LIMIT=500 OWNER_EMAILS=owner@example.com \
+//   BILLING_JOB_INTERVAL_MS=10000 \
 //   node dist/index.js > server.log 2>&1 &
 //
 // then:  LOG=server.log node scripts/smoke-test.mjs
@@ -77,9 +78,16 @@ ok(sumFree.locked && sumLessons[0].takeaways && sumLessons.slice(1).every((l) =>
 const qa = await api('/api/courses/pcb-design/assessments/unit-1', { token });
 ok(qa.status === 402 && !qa.data.questions, 'quiz locked for free user');
 
-console.log('Checkout (Stripe unreachable with fake key)');
-const co = await api('/api/billing/checkout', { method: 'POST', token, body: { plan: 'monthly' } });
-ok(co.status >= 400 && co.status < 600 && typeof co.data === 'object', `checkout fails cleanly (status ${co.status})`, JSON.stringify(co.data).slice(0, 200));
+console.log('Checkout consent (Stripe unreachable with fake key)');
+const c0 = await api('/api/billing/checkout', { method: 'POST', token, body: { plan: 'monthly' } });
+ok(c0.status === 400 && /renews automatically every month at \$15 per month/.test(c0.data.disclosure ?? '') && c0.data.plan === 'founding-monthly', 'checkout without the consent box is refused, with the founding terms', JSON.stringify(c0.data).slice(0, 300));
+const c1 = await api('/api/billing/checkout', { method: 'POST', token, body: { plan: 'monthly', consent: true, disclosure: 'I agree that my Monthly subscription renews automatically every month at $29 per month' } });
+ok(c1.status === 409 && c1.data.disclosure === c0.data.disclosure, 'consent to different (stale) terms is refused');
+ok((await api('/api/billing/consents', { token })).data.consents.length === 0, 'refused attempts record no consent');
+const co = await api('/api/billing/checkout', { method: 'POST', token, body: { plan: 'monthly', consent: true, disclosure: c0.data.disclosure } });
+ok(co.status >= 500 && co.status < 600 && typeof co.data === 'object', `with consent, reaches Stripe (fails cleanly with fake key: ${co.status})`, JSON.stringify(co.data).slice(0, 200));
+const consents = (await api('/api/billing/consents', { token })).data.consents;
+ok(consents.length === 1 && consents[0].plan === 'founding-monthly' && consents[0].disclosure === c0.data.disclosure && consents[0].version, 'consent recorded with plan, exact wording and version', JSON.stringify(consents));
 
 console.log('Webhooks');
 const bad = await api('/api/stripe/webhook', { method: 'POST', raw: '{"type":"x"}', headers: { 'content-type': 'application/json', 'stripe-signature': 't=1,v1=bad' } });
@@ -169,6 +177,27 @@ me = (await api('/api/me', { token })).data.user;
 ok(!me.subscribed && me.status === 'canceled' && !me.cancelAtPeriodEnd, 'canceled -> access removed');
 ok((await api('/api/review', { token })).status === 402, 'review needs a subscription');
 ok((await api('/api/courses/pcb-design/lessons/2-1', { token })).status === 402, 'lesson locked again after cancel');
+
+const confirmations = () => fs.readFileSync(LOG, 'utf8').split(`to=${email} subject="Your Ohmentum subscription is confirmed"`).length - 1;
+ok(confirmations() === 1, 'confirmation email sent once across created/updated webhooks', `count=${confirmations()}`);
+ok(/Your plan: Founding Monthly, \$15 per month[\s\S]*renews automatically every month/.test(fs.readFileSync(LOG, 'utf8')), 'confirmation states plan, price and renewal terms');
+
+console.log('Renewal reminders');
+const DAY = 86400, nowS = Math.floor(Date.now() / 1000);
+const mk = async (tag) => (await api('/api/auth/signup', { method: 'POST', body: { email: `e2e+${tag}${Date.now()}@example.com`, password: pw, name: `R ${tag}`, acceptTerms: true } })).data;
+const ua = await mk('annual'), um = await mk('monthly');
+const annualSub = sub(`sub_a${nowS}`, `cus_a${nowS}`, 'active', ua.user.id, 'price_a', 'year');
+annualSub.items.data[0].current_period_end = nowS + 20 * DAY;
+annualSub.start_date = nowS - 345 * DAY;
+await webhook('customer.subscription.created', annualSub);
+const monthlySub = { ...sub(`sub_m${nowS}`, `cus_m${nowS}`, 'active', um.user.id, 'price_m'), start_date: nowS - 400 * DAY };
+await webhook('customer.subscription.created', monthlySub);
+const waitFor = async (re, ms = 20000) => { const t = Date.now(); while (Date.now() - t < ms) { if (re.test(fs.readFileSync(LOG, 'utf8'))) return true; await new Promise((r) => setTimeout(r, 500)); } return false; };
+ok(await waitFor(new RegExp(`to=${ua.user.email.replace(/[+.]/g, '\\$&')} subject="Your Ohmentum subscription renews on`)), 'annual plan: reminder emailed within 30 days of renewal');
+ok(await waitFor(new RegExp(`to=${um.user.email.replace(/[+.]/g, '\\$&')} subject="Your yearly Ohmentum subscription reminder"`)), 'monthly plan: yearly reminder after the first year');
+await new Promise((r) => setTimeout(r, 12000)); // let the job run again
+const logNow = fs.readFileSync(LOG, 'utf8');
+ok(logNow.split(`to=${ua.user.email} subject="Your Ohmentum subscription renews on`).length === 2 && logNow.split(`to=${um.user.email} subject="Your yearly`).length === 2, 'reminders are not repeated on later runs');
 
 console.log('Password reset');
 ok((await api('/api/auth/forgot', { method: 'POST', body: { email: 'nobody@example.com' } })).data.ok, 'forgot for unknown email answers ok (no enumeration)');

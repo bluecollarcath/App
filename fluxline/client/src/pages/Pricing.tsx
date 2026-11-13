@@ -31,6 +31,9 @@ export default function Pricing() {
             ? 'Join early and lock in a lower price for as long as you stay subscribed, even after prices go up.'
             : 'One subscription unlocks the entire electrical engineering curriculum.'}
         </p>
+        {user && !user.subscribed && (params.get('plan') === 'monthly' || params.get('plan') === 'annual') && (
+          <p className="mt-4 rounded-xl bg-emerald-50 p-3 text-sm text-emerald-800">You're signed in. Review the renewal terms on your plan below, tick the box, and continue to checkout.</p>
+        )}
         {params.get('checkout') === 'cancelled' && <p className="mt-4 rounded-xl bg-slate-100 p-3 text-sm text-slate-600">Checkout cancelled. You haven't been charged.</p>}
       </div>
 
@@ -89,13 +92,9 @@ export default function Pricing() {
                   {FEATURES.map((f) => <li key={f} className="flex gap-2"><Check size={18} className={`shrink-0 ${featured ? 'text-brand' : 'text-emerald-500'}`} />{f}</li>)}
                 </ul>
                 <div className="mt-8">
-                  <SubscribeButton plan={key} className={featured ? 'btn-brand w-full' : 'btn-primary w-full'}>
+                  <SubscribeButton plan={key} founding={founding} dark={featured} highlight={params.get('plan') === key} className={featured ? 'btn-brand w-full' : 'btn-primary w-full'}>
                     {founding ? `Become a founding member` : `Subscribe ${p.label.toLowerCase()}`}
                   </SubscribeButton>
-                  <p className={`mt-3 text-xs leading-5 ${featured ? 'text-slate-400' : 'text-slate-500'}`}>
-                    Renews automatically at ${p.price}/{p.per} until you cancel. Cancel anytime from your account page; you keep access through the period you've paid for.
-                    {founding && ' If you cancel and rejoin later, the regular price applies.'}
-                  </p>
                 </div>
               </div>
             );
@@ -103,7 +102,7 @@ export default function Pricing() {
         </div>
       )}
       <p className="mx-auto mt-10 max-w-2xl text-center text-sm leading-6 text-slate-500">
-        Payments are processed securely by Stripe. Subscriptions renew automatically until cancelled. By subscribing you agree to our{' '}
+        Payments are processed securely by Stripe. Subscriptions renew automatically until cancelled, and you can cancel anytime online from your account page. By subscribing you agree to our{' '}
         <Link to="/terms" className="underline">Terms of Service</Link> and <Link to="/refunds" className="underline">Refund Policy</Link>.
         Ohmentum is not an accredited institution and does not award academic credit or degrees.
       </p>

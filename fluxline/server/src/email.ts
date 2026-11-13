@@ -84,3 +84,74 @@ If you didn't do this, reset your password right away from the sign-in page and 
 — Ohmentum`,
   };
 }
+
+// ── Subscription emails (automatic-renewal notices) ────────────────────
+// Each states the plan, price, billing frequency, that it renews until canceled, and how to cancel.
+
+export interface PlanFacts { name: string; label: string; price: number; per: string; founding: boolean; siteUrl: string }
+const fmtDate = (unixSeconds: number) =>
+  new Date(unixSeconds * 1000).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' });
+const cancelHow = (siteUrl: string) =>
+  `To cancel, sign in and open your account page (${siteUrl}/account), then choose "Manage billing or cancel". It takes a few clicks, and you keep access until the end of the period you've paid for.`;
+
+export function subscriptionConfirmationEmail(f: PlanFacts & { renewsOn: number | null }): Pick<Mail, 'subject' | 'text'> {
+  return {
+    subject: 'Your Ohmentum subscription is confirmed',
+    text: `Hi ${f.name},
+
+Thanks for subscribing to Ohmentum. Every course, quiz, exam and study sheet is now unlocked.
+
+Your plan: ${f.label}, $${f.price} per ${f.per}, plus any applicable taxes.${f.founding ? '\nFounding Member price: it stays the same as long as your subscription stays active.' : ''}
+
+Automatic renewal: your subscription renews automatically every ${f.per}, and your payment method is charged $${f.price} each time, until you cancel.${f.renewsOn ? ` Your next renewal is on ${fmtDate(f.renewsOn)}.` : ''}
+
+${cancelHow(f.siteUrl)}
+
+Refunds: if you're not satisfied, contact us within 14 days of your first payment for a full refund. Details: ${f.siteUrl}/refunds
+
+— Ohmentum`,
+  };
+}
+
+export function renewalReminderEmail(f: PlanFacts & { renewsOn: number }): Pick<Mail, 'subject' | 'text'> {
+  return {
+    subject: `Your Ohmentum subscription renews on ${fmtDate(f.renewsOn)}`,
+    text: `Hi ${f.name},
+
+This is a reminder that your ${f.label} Ohmentum subscription renews automatically on ${fmtDate(f.renewsOn)}. On that date your payment method will be charged $${f.price} (plus any applicable taxes) for another ${f.per}, and it will keep renewing every ${f.per} until you cancel.
+
+To keep learning, you don't need to do anything.
+
+${cancelHow(f.siteUrl)}
+
+— Ohmentum`,
+  };
+}
+
+export function yearlyReminderEmail(f: PlanFacts & { renewsOn: number | null }): Pick<Mail, 'subject' | 'text'> {
+  return {
+    subject: 'Your yearly Ohmentum subscription reminder',
+    text: `Hi ${f.name},
+
+Once a year we remind every subscriber of their plan's terms.
+
+Your plan: ${f.label}, $${f.price} per ${f.per}, plus any applicable taxes. It renews automatically every ${f.per} until you cancel.${f.renewsOn ? ` Your next renewal is on ${fmtDate(f.renewsOn)}.` : ''}
+
+${cancelHow(f.siteUrl)}
+
+— Ohmentum`,
+  };
+}
+
+export function priceChangeEmail(f: PlanFacts & { newPrice: number; effective: string }): Pick<Mail, 'subject' | 'text'> {
+  return {
+    subject: 'A change to your Ohmentum subscription price',
+    text: `Hi ${f.name},
+
+We're letting you know at least 30 days ahead: the price of the ${f.label} plan is changing from $${f.price} to $${f.newPrice} per ${f.per}. The new price applies starting with your first renewal on or after ${f.effective}. Until then, nothing changes.
+
+If you'd rather not continue at the new price, you can cancel before then. ${cancelHow(f.siteUrl)}
+
+— Ohmentum`,
+  };
+}

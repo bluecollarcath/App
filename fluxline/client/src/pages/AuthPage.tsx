@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../lib/auth';
-import { api, followRedirect } from '../lib/api';
+
 import { useTitle } from '../lib/hooks';
 import { Logo } from '../components/Layout';
 
@@ -27,11 +27,8 @@ export default function AuthPage({ mode }: { mode: 'login' | 'signup' }) {
         if (!accept) { setErr('Please confirm your age and accept the Terms of Service and Privacy Policy to continue.'); setBusy(false); return; }
         await signup(name, email, password, true);
       }
-      if (plan === 'monthly' || plan === 'annual') {
-        const { url } = await api<{ url: string }>('/billing/checkout', { body: { plan } });
-        followRedirect(url, nav);
-        return;
-      }
+      // Back to pricing to agree to the renewal terms before checkout.
+      if (plan === 'monthly' || plan === 'annual') { nav(`/pricing?plan=${plan}`); return; }
       nav('/dashboard');
     } catch (e2) {
       setErr((e2 as Error).message);
@@ -46,7 +43,7 @@ export default function AuthPage({ mode }: { mode: 'login' | 'signup' }) {
         <Logo />
         <h1 className="mt-6 text-2xl font-bold text-ink">{mode === 'login' ? 'Welcome back' : 'Create your free account'}</h1>
         <p className="mt-1 text-sm text-slate-500">
-          {mode === 'login' ? 'Sign in to continue learning.' : plan ? 'Create an account, then complete checkout.' : 'Get the first lesson of every course free.'}
+          {mode === 'login' ? 'Sign in to continue learning.' : plan ? 'Create an account, then review your plan and check out.' : 'Get the first lesson of every course free.'}
         </p>
         <form onSubmit={submit} className="mt-6 space-y-4">
           {mode === 'signup' && (

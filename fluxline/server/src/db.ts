@@ -75,6 +75,28 @@ function schema(idCol: string, bigint: string) {
       cleared_at TEXT NOT NULL,
       PRIMARY KEY (user_id, course_slug, assessment_id, q_index)
     )`,
+    // Proof of each customer's consent to automatic-renewal terms, kept at least 3 years (and
+    // kept, detached from the account, if the account is deleted).
+    `CREATE TABLE IF NOT EXISTS subscription_consents (
+      id ${idCol},
+      user_id INTEGER,
+      email TEXT NOT NULL,
+      plan TEXT NOT NULL,
+      disclosure TEXT NOT NULL,
+      version TEXT NOT NULL,
+      ip TEXT,
+      user_agent TEXT,
+      created_at TEXT NOT NULL
+    )`,
+    // One row per billing email sent (confirmation, renewal reminder, price change), so each is sent once.
+    `CREATE TABLE IF NOT EXISTS billing_notices (
+      subscription_id TEXT NOT NULL,
+      kind TEXT NOT NULL,
+      notice_key TEXT NOT NULL,
+      user_id INTEGER,
+      sent_at TEXT NOT NULL,
+      PRIMARY KEY (subscription_id, kind, notice_key)
+    )`,
     `CREATE TABLE IF NOT EXISTS contact_messages (
       id ${idCol},
       name TEXT NOT NULL,
@@ -150,6 +172,7 @@ export async function migrate() {
   if (db.kind === 'postgres') {
     await db.run('ALTER TABLE users ADD COLUMN IF NOT EXISTS token_version INTEGER NOT NULL DEFAULT 0');
     await db.run('ALTER TABLE users ADD COLUMN IF NOT EXISTS sub_cancel_at_end INTEGER NOT NULL DEFAULT 0');
+    await db.run('ALTER TABLE users ADD COLUMN IF NOT EXISTS sub_started_at BIGINT');
   } else {
     const cols = await db.all<{ name: string }>('PRAGMA table_info(users)');
     if (!cols.some((c) => c.name === 'token_version')) {
@@ -157,6 +180,9 @@ export async function migrate() {
     }
     if (!cols.some((c) => c.name === 'sub_cancel_at_end')) {
       await db.run('ALTER TABLE users ADD COLUMN sub_cancel_at_end INTEGER NOT NULL DEFAULT 0');
+    }
+    if (!cols.some((c) => c.name === 'sub_started_at')) {
+      await db.run('ALTER TABLE users ADD COLUMN sub_started_at INTEGER');
     }
   }
   await db.run('UPDATE users SET email = lower(email) WHERE email <> lower(email)');
@@ -178,6 +204,8 @@ export interface UserRow {
   sub_period_end: number | null;
   /** 1 when the subscriber has canceled and access ends at sub_period_end. */
   sub_cancel_at_end: number | null;
+  /** When the current subscription started (unix seconds), for yearly reminders. */
+  sub_started_at: number | null;
 }
 
 export function findUserById(id: number) {

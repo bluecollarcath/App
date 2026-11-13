@@ -150,7 +150,8 @@ These use `APP_URL`, so set it to your real domain. After launch, submit
 
 `server/scripts/smoke-test.mjs` runs the whole customer journey against a local server: sign-up,
 free vs. locked lessons, Stripe webhooks (signed locally), quizzes, failed payments and
-cancellation, password reset, support forms, owner access and account deletion. Instructions
+cancellation, auto-renewal consent, confirmation and renewal-reminder emails, password reset,
+support forms, owner access and account deletion. Instructions
 are at the top of the file. Run it against a scratch database before each release.
 
 ## Project layout
@@ -189,8 +190,35 @@ payment so you can try the full experience. Demo billing is always off when
    the subscriber keeps access and sees a banner asking them to update their card. When
    retries run out, access ends automatically. Also turn on Stripe's emails for failed payments
    and expiring cards.
-5. The prices displayed on the site live in `client/src/lib/api.ts` (`PLANS`: $29/mo, $249/yr) —
-   keep them in sync with your Stripe prices.
+5. The prices displayed on the site, and the consent wording, live in `server/src/pricing.ts`
+   (`PLANS`: $29/mo, $249/yr) — keep them in sync with your Stripe prices.
+
+## Automatic-renewal compliance
+
+What the site does for automatic-renewal laws (federal ROSCA, California's ARL and similar):
+
+- **Consent at checkout.** Each plan on the pricing page has a checkbox stating the price, how
+  often it renews, that it renews until canceled, and how to cancel. Checkout is refused until
+  it's ticked, and the server checks the wording matches the plan actually being charged.
+  The same terms appear on Stripe's payment page next to the Pay button.
+- **Consent records.** Every agreement is stored in `subscription_consents` (account, email,
+  plan, exact wording, `CONSENT_VERSION`, IP, browser, time). If an account is deleted the
+  record is kept, detached from the account, and removed after about 3 years. Customers can see
+  their own records at `/api/billing/consents`. If you change the wording in
+  `server/src/pricing.ts`, bump `CONSENT_VERSION`.
+- **Confirmation email** when a subscription starts, with the plan, price, renewal terms, how
+  to cancel and the refund window.
+- **Renewal reminders,** checked every 6 hours: annual plans get one 30 days before each
+  renewal; monthly plans get a yearly reminder of their terms. Each is sent once
+  (`billing_notices`). Members who've already canceled get none.
+- **Price-change notices** (the Terms promise 30 days' notice). Before raising a price, run from
+  `server/` with the production `DATABASE_URL`, `RESEND_API_KEY`, `EMAIL_FROM` and `APP_URL`:
+  `npx tsx scripts/price-change-notice.ts --plan monthly --new-price 35 --effective 2027-06-01`
+  (a dry run that lists recipients), then again with `--send`. It refuses dates under 30 days
+  away and skips Founding Members. Change the Stripe price and `pricing.ts` on the effective date.
+
+Because the site sends its own reminders, Stripe's "upcoming renewal" emails are optional;
+leaving them on just means annual subscribers get two reminders.
 
 ## Going live on Render (checklist)
 
@@ -212,9 +240,8 @@ payment so you can try the full experience. Demo billing is always off when
    `the State of Texas`), `VITE_DISPUTE_VENUE` (e.g. `Jefferson County, Alabama`; adds a courts clause), and optionally `VITE_POSTAL_ADDRESS`, then redeploy. Have a lawyer
    review the Terms, Privacy, and Refund pages (`client/src/pages/Legal.tsx`) before launch; the
    refund window is `refundWindowDays` in `client/src/lib/site.ts`.
-6. **Stripe:** see below. Also turn on **Settings → Billing → Subscriptions and emails → Send
-   reminders about upcoming renewals**, since the Refund Policy promises annual-renewal
-   reminders.
+6. **Stripe:** see below. Renewal reminders are sent by the site itself (see "Automatic-renewal
+   compliance"), so they need the email settings above.
 
 ## Founding Member pricing
 
@@ -230,7 +257,7 @@ started with, so raising regular prices later never affects founding members.
 4. To end the offer, set `FOUNDING_OFFER=false` and redeploy. Existing founding members keep
    their price.
 
-The displayed founding prices live in `client/src/lib/api.ts` (`FOUNDING_PLANS`); keep them in
+The displayed founding prices live in `server/src/pricing.ts` (`FOUNDING_PLANS`); keep them in
 sync with Stripe. If founding prices aren't configured, the site simply shows regular pricing.
 
 ## Deploy
