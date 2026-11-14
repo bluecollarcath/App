@@ -5,6 +5,7 @@ import { useApi, useTitle } from '../lib/hooks';
 import type { Catalog } from '../lib/api';
 import { useProgress } from '../lib/progress';
 import CourseCard from '../components/CourseCard';
+import MhoTeaser from '../components/MhoTeaser';
 
 export default function Dashboard() {
   useTitle('My learning');
@@ -69,6 +70,8 @@ export default function Dashboard() {
           <ArrowRight />
         </Link>
       )}
+
+      <div className="mt-8"><MhoTeaser compact /></div>
 
       {inProgress.length > 0 && (
         <section className="mt-12">
