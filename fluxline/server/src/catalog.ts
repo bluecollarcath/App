@@ -143,9 +143,39 @@ export const COURSES: CourseDef[] = [
     ],
   },
   {
+    slug: 'physics-mechanics', code: 'PHYS 211', title: 'University Physics: Mechanics', stage: 1, track: 'Math & Science', hours: 45,
+    description: 'Physics I: how things move and why. Vectors, motion in one and two dimensions, Newton\'s laws, energy, momentum, rotation and oscillation, built up from first principles with the calculus you already know. Every idea is tied back to the circuits and machines you\'ll meet later.',
+    prereqs: ['calculus-for-engineers'],
+    outcomes: ['Describe motion with vectors, velocity and acceleration, in one and two dimensions', 'Draw free-body diagrams and apply Newton\'s laws to solve for forces and motion', 'Use energy and momentum conservation to solve problems that forces alone make hard', 'Analyze rotation with torque, moment of inertia and angular momentum', 'Model oscillations, damping and resonance, and connect them to LC and RLC circuits'],
+    units: [
+      { title: 'Describing Motion', lessons: [
+        ['Units, Vectors & Position', 'SI units; significant figures; vectors and components; displacement'],
+        ['Velocity & Acceleration', 'average vs instantaneous; derivatives; motion graphs; constant-acceleration equations'],
+        ['Motion in Two Dimensions', 'independent x and y; projectiles; range; relative velocity'],
+        ['Circular Motion', 'angular position and speed; period; centripetal acceleration'],
+      ] },
+      { title: 'Forces & Newton\'s Laws', lessons: [
+        ['Newton\'s Laws & Free-Body Diagrams', 'inertia; F = ma; action-reaction; weight vs mass'],
+        ['Friction, Tension & Inclines', 'normal force; static and kinetic friction; ropes and pulleys; ramps'],
+        ['Circular Motion Forces & Gravity', 'centripetal force; universal gravitation; orbits; apparent weight'],
+      ] },
+      { title: 'Energy & Momentum', lessons: [
+        ['Work & Kinetic Energy', 'work by constant and varying forces; work-energy theorem'],
+        ['Potential Energy, Conservation & Power', 'gravitational and spring energy; energy conservation; power and efficiency'],
+        ['Momentum, Impulse & Collisions', 'impulse; conservation of momentum; elastic and inelastic collisions'],
+      ] },
+      { title: 'Rotation & Oscillation', lessons: [
+        ['Rotational Motion & Torque', 'angular kinematics; torque; moment of inertia'],
+        ['Rotational Dynamics & Angular Momentum', 'τ = Iα; rotational kinetic energy; rolling; angular momentum; motors'],
+        ['Simple Harmonic Motion', 'springs; pendulums; ω = √(k/m); energy in oscillation'],
+        ['Damping, Resonance & the RLC Connection', 'damped oscillation; driven oscillation; resonance; quality factor; mechanical-electrical analogy'],
+      ] },
+    ],
+  },
+  {
     slug: 'physics-electricity-magnetism', code: 'PHYS 212', title: 'University Physics: Electricity & Magnetism', stage: 1, track: 'Math & Science', hours: 45,
     description: 'Calculus-based physics of electric charge, fields, potential, current, magnetism, and induction — the physical foundation of the discipline.',
-    prereqs: ['calculus-for-engineers'],
+    prereqs: ['physics-mechanics', 'calculus-for-engineers'],
     outcomes: ['Compute electric fields from charge distributions', 'Apply Gauss\'s law to symmetric problems', 'Relate potential, capacitance, and stored energy', 'Use Faraday\'s law to explain induction'],
     units: [
       { title: 'Electrostatics', lessons: [
@@ -313,6 +343,36 @@ export const COURSES: CourseDef[] = [
 
   // ───────────────────────────── STAGE 3 ─────────────────────────────
   {
+    slug: 'modern-physics-quantum', code: 'PHYS 214', title: 'Modern Physics & Quantum Mechanics', stage: 2, track: 'Math & Science', hours: 45,
+    description: 'Where classical physics breaks down and quantum mechanics takes over: photons, matter waves, the Schrödinger equation, tunneling, atoms and spin, and how electrons in crystals form the energy bands behind every diode, transistor, LED and solar cell. Ends with an honest first look at quantum computing.',
+    prereqs: ['physics-electricity-magnetism', 'differential-equations'],
+    outcomes: ['Use photon energy and the electron-volt to explain the photoelectric effect and atomic spectra', 'Interpret wavefunctions as probability amplitudes and apply the uncertainty principle', 'Solve the Schrödinger equation for wells and barriers, and estimate tunneling probabilities', 'Explain atomic structure with quantum numbers, spin and the Pauli exclusion principle', 'Explain how energy bands form in solids and why materials conduct, insulate or act as semiconductors', 'Relate bandgaps to LEDs, lasers and solar cells, and describe what a qubit is'],
+    units: [
+      { title: 'The Quantum Revolution', lessons: [
+        ['Light as Particles: Photons', 'blackbody radiation; E = hf; the electron-volt; the photoelectric effect'],
+        ['Matter as Waves', 'de Broglie wavelength; electron diffraction; the double-slit experiment'],
+        ['Atoms, Energy Levels & Spectra', 'Bohr model; quantized energy; emission and absorption lines'],
+      ] },
+      { title: 'The Schrödinger Equation', lessons: [
+        ['Wavefunctions & Probability', 'ψ and |ψ|²; normalization; expectation values'],
+        ['The Uncertainty Principle', 'Δx Δp ≥ ħ/2; energy-time; why atoms don\'t collapse'],
+        ['The Schrödinger Equation & the Particle in a Box', 'time-independent equation; boundary conditions; quantized energies; quantum dots'],
+        ['Finite Wells & the Quantum Harmonic Oscillator', 'evanescent waves; bound states; zero-point energy'],
+      ] },
+      { title: 'Tunneling, Atoms & Spin', lessons: [
+        ['Quantum Tunneling', 'barrier penetration; T ≈ e^(−2κL); flash memory; tunnel diodes; STM'],
+        ['The Hydrogen Atom & Quantum Numbers', 'n, l, m; orbitals; energy levels'],
+        ['Spin & the Pauli Exclusion Principle', 'electron spin; magnetic moment; shell filling; the periodic table'],
+      ] },
+      { title: 'Quantum Physics of Solids', lessons: [
+        ['From Atoms to Energy Bands', 'level splitting; bands and gaps; conductors, insulators, semiconductors'],
+        ['Electrons in Solids: Fermi Level, Holes & Doping', 'Fermi-Dirac distribution; holes; effective mass; n and p doping'],
+        ['Light & Semiconductors: LEDs, Lasers & Solar Cells', 'bandgap and wavelength; stimulated emission; photovoltaics'],
+        ['Quantum Technology: Qubits & Quantum Computing', 'superposition; measurement; entanglement; real qubits and their limits'],
+      ] },
+    ],
+  },
+  {
     slug: 'microelectronics-1', code: 'ECE 310', title: 'Microelectronics I', stage: 3, track: 'Circuits & Electronics', hours: 50,
     description: 'Semiconductor devices as circuit elements: diodes, BJTs, and MOSFETs. Biasing, small-signal models, and single-stage amplifier design.',
     prereqs: ['circuit-analysis-2'],
@@ -419,7 +479,7 @@ export const COURSES: CourseDef[] = [
   {
     slug: 'semiconductor-devices', code: 'ECE 340', title: 'Semiconductor Devices', stage: 3, track: 'Circuits & Electronics', hours: 40,
     description: 'The physics behind the transistor: crystal structure, energy bands, carrier statistics and transport, the p-n junction, and the operating principles of BJTs and MOSFETs.',
-    prereqs: ['physics-electricity-magnetism'],
+    prereqs: ['modern-physics-quantum'],
     outcomes: ['Explain energy bands and carrier statistics', 'Model drift and diffusion currents', 'Derive the ideal diode equation', 'Relate device physics to transistor models'],
     units: [
       { title: 'Semiconductor Fundamentals', lessons: [
