@@ -179,7 +179,8 @@ payment so you can try the full experience. Demo billing is always off when
 1. Create a Product with two recurring Prices (monthly and annual). Put their IDs in
    `STRIPE_PRICE_MONTHLY` / `STRIPE_PRICE_ANNUAL`, and your secret key in `STRIPE_SECRET_KEY`.
 2. Add a webhook endpoint at `https://your-domain/api/stripe/webhook` for
-   `checkout.session.completed` and `customer.subscription.created|updated|deleted`; put its
+   `checkout.session.completed`, `checkout.session.expired` and
+   `customer.subscription.created|updated|deleted`; put its
    signing secret in `STRIPE_WEBHOOK_SECRET`. (Locally: `stripe listen --forward-to localhost:8787/api/stripe/webhook`.)
 3. Enable the Customer Portal in the Stripe dashboard (used by "Manage billing"). Allow customers
    to update payment methods and cancel **at the end of the billing period**; the Account page
@@ -253,7 +254,15 @@ started with, so raising regular prices later never affects founding members.
 2. In Render, set `STRIPE_PRICE_FOUNDING_MONTHLY` and `STRIPE_PRICE_FOUNDING_ANNUAL` to those
    price IDs, and `FOUNDING_OFFER=true`.
 3. Optional: `FOUNDING_LIMIT=500` caps the offer; the pricing page shows the spots left and
-   switches back to regular prices automatically when they run out.
+   switches back to regular prices automatically when they run out. The cap is exact:
+   - Starting checkout **holds a spot** (table `founding_reservations`), claimed one at a time
+     under a database lock, so with one spot left and many people clicking at once, exactly
+     one gets it. Stripe checkout links expire after 31 minutes, and an unpaid hold is released
+     shortly after (immediately if the `checkout.session.expired` webhook event is enabled).
+   - Every founding subscription ever started counts, including canceled ones, so the offer
+     goes to the first 500 people. Former founding members who rejoin pay the regular price,
+     as the renewal terms say. Deleted accounts free their spot.
+   - Test with `server/scripts/founding-cap-test.ts` (instructions at the top of the file).
 4. To end the offer, set `FOUNDING_OFFER=false` and redeploy. Existing founding members keep
    their price.
 

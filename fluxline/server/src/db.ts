@@ -14,6 +14,12 @@ export interface Db {
   all<T>(sql: string, params?: unknown[]): Promise<T[]>;
   get<T>(sql: string, params?: unknown[]): Promise<T | undefined>;
   run(sql: string, params?: unknown[]): Promise<{ changes: number }>;
+  /**
+   * Runs fn with no other exclusive block running at the same time (anywhere, on Postgres: a
+   * transaction holding an advisory lock; on SQLite: an in-process queue). Use for
+   * check-then-write steps that must not race, like reserving a limited Founding spot.
+   */
+  exclusive<T>(fn: (tx: Pick<Db, 'all' | 'get' | 'run'>) => Promise<T>): Promise<T>;
 }
 
 // Shared schema. Only the auto-increment id column differs between engines.
@@ -97,6 +103,13 @@ function schema(idCol: string, bigint: string) {
       sent_at TEXT NOT NULL,
       PRIMARY KEY (subscription_id, kind, notice_key)
     )`,
+    // Founding spots held while a customer is in Stripe checkout, so the cap can't be overshot.
+    `CREATE TABLE IF NOT EXISTS founding_reservations (
+      user_id INTEGER PRIMARY KEY,
+      session_id TEXT,
+      expires_at ${bigint} NOT NULL,
+      created_at TEXT NOT NULL
+    )`,
     `CREATE TABLE IF NOT EXISTS contact_messages (
       id ${idCol},
       name TEXT NOT NULL,
@@ -134,6 +147,26 @@ function createPostgres(url: string): Db {
     async run(sql, params = []) {
       return { changes: (await pool.query(toPg(sql), params)).rowCount ?? 0 };
     },
+    async exclusive(fn) {
+      const client = await pool.connect();
+      try {
+        await client.query('BEGIN');
+        await client.query('SELECT pg_advisory_xact_lock(7212601)'); // released at COMMIT/ROLLBACK
+        const tx = {
+          async all(sql: string, params: unknown[] = []) { return (await client.query(toPg(sql), params)).rows; },
+          async get(sql: string, params: unknown[] = []) { return (await client.query(toPg(sql), params)).rows[0]; },
+          async run(sql: string, params: unknown[] = []) { return { changes: (await client.query(toPg(sql), params)).rowCount ?? 0 }; },
+        } as Pick<Db, 'all' | 'get' | 'run'>;
+        const out = await fn(tx);
+        await client.query('COMMIT');
+        return out;
+      } catch (err) {
+        await client.query('ROLLBACK').catch(() => {});
+        throw err;
+      } finally {
+        client.release();
+      }
+    },
   };
 }
 
@@ -142,7 +175,7 @@ function createSqlite(file: string): Db {
   sqlite.pragma('journal_mode = WAL');
   sqlite.pragma('foreign_keys = ON');
   const returns = (sql: string) => /\breturning\b/i.test(sql) || /^\s*select/i.test(sql);
-  return {
+  const out: Db = {
     kind: 'sqlite',
     async all(sql, params = []) {
       return sqlite.prepare(sql).all(...params) as never[];
@@ -155,7 +188,16 @@ function createSqlite(file: string): Db {
       if (returns(sql)) return { changes: stmt.all(...params).length };
       return { changes: stmt.run(...params).changes };
     },
+    exclusive(fn) {
+      // One connection in one process: a promise queue is enough to serialize the blocks.
+      const next = queue.then(() => fn(self));
+      queue = next.catch(() => {});
+      return next;
+    },
   };
+  let queue: Promise<unknown> = Promise.resolve();
+  const self = out;
+  return out;
 }
 
 const db: Db = process.env.DATABASE_URL

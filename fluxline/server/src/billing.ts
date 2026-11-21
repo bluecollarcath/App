@@ -54,31 +54,83 @@ if (billingMode !== 'disabled') {
 
 export const billingRouter = Router();
 
+const foundingConfigured = () =>
+  FOUNDING_ON && (billingMode === 'demo' || (billingMode === 'stripe' && !!FOUNDING_PRICES.monthly && !!FOUNDING_PRICES.annual));
+
+// Founding spots taken = founding members (current or past: a canceled member's spot is not
+// handed out again) + spots held by customers who are in checkout right now.
+const SPOTS_TAKEN = `SELECT
+  (SELECT COUNT(*) FROM users WHERE sub_plan LIKE 'founding-%')
+  + (SELECT COUNT(*) FROM founding_reservations r WHERE r.expires_at > ?
+       AND NOT EXISTS (SELECT 1 FROM users u WHERE u.id = r.user_id AND u.sub_plan LIKE 'founding-%')) AS n`;
+
+/** Stripe checkout links expire after this long (Stripe's minimum is 30 minutes). */
+const CHECKOUT_MINUTES = 31;
+/** A held spot outlives its checkout link a little, so a payment made at the last second still counts. */
+const HOLD_GRACE_MINUTES = 15;
+
 /** Whether new subscribers currently get founding pricing, and how many spots remain. */
 export async function foundingStatus() {
-  const configured = billingMode === 'demo' || (billingMode === 'stripe' && !!FOUNDING_PRICES.monthly && !!FOUNDING_PRICES.annual);
-  if (!FOUNDING_ON || !configured) return { active: false, limit: null as number | null, remaining: null as number | null };
+  if (!foundingConfigured()) return { active: false, limit: null as number | null, remaining: null as number | null };
   if (!FOUNDING_LIMIT) return { active: true, limit: null, remaining: null };
-  const row = await db.get<{ n: number | string }>("SELECT COUNT(*) AS n FROM users WHERE sub_plan LIKE 'founding-%'");
+  const row = await db.get<{ n: number | string }>(SPOTS_TAKEN, [Math.floor(Date.now() / 1000)]);
   const remaining = Math.max(0, FOUNDING_LIMIT - Number(row?.n ?? 0));
   return { active: remaining > 0, limit: FOUNDING_LIMIT, remaining };
+}
+
+/**
+ * Decides whether this customer gets founding pricing, and if so holds a spot for them for the
+ * length of their checkout. Runs exclusively, so with one spot left and many people clicking at
+ * once, exactly one gets it. Returns true if the customer has a founding spot.
+ */
+export async function claimFoundingSpot(userId: number): Promise<boolean> {
+  if (!foundingConfigured()) return false;
+  if (!FOUNDING_LIMIT) {
+    const me = await db.get<{ sub_plan: string | null }>('SELECT sub_plan FROM users WHERE id = ?', [userId]);
+    return !me?.sub_plan?.startsWith('founding-');
+  }
+  const holdUntil = Math.floor(Date.now() / 1000) + (CHECKOUT_MINUTES + HOLD_GRACE_MINUTES) * 60;
+  return db.exclusive(async (tx) => {
+    const nowSec = Math.floor(Date.now() / 1000);
+    await tx.run('DELETE FROM founding_reservations WHERE expires_at <= ?', [nowSec]);
+    // Someone who already had a founding subscription keeps counting toward the cap, but the
+    // terms they agreed to say the regular price applies if they rejoin.
+    const me = await tx.get<{ sub_plan: string | null }>('SELECT sub_plan FROM users WHERE id = ?', [userId]);
+    if (me?.sub_plan?.startsWith('founding-')) return false;
+    // Already holding a spot (e.g. reopened checkout): extend it.
+    if ((await tx.run('UPDATE founding_reservations SET expires_at = ? WHERE user_id = ?', [holdUntil, userId])).changes) return true;
+    const row = await tx.get<{ n: number | string }>(SPOTS_TAKEN, [nowSec]);
+    if (Number(row?.n ?? 0) >= FOUNDING_LIMIT) return false;
+    await tx.run('INSERT INTO founding_reservations (user_id, session_id, expires_at, created_at) VALUES (?,?,?,?)', [userId, null, holdUntil, now()]);
+    return true;
+  });
+}
+
+/** Gives back a held founding spot (checkout abandoned, failed, or completed). */
+export async function releaseFoundingSpot(userId: number) {
+  await db.run('DELETE FROM founding_reservations WHERE user_id = ?', [userId]);
 }
 
 billingRouter.post('/checkout', requireAuth, async (req, res) => {
   const user = req.user!;
   const interval = req.body?.plan === 'annual' ? 'annual' : 'monthly';
-  const founding = (await foundingStatus()).active;
+  // Only the consent check below needs to know whether this is a founding checkout before a spot
+  // is held, so check consent is present first, then claim.
+  if (billingMode !== 'disabled' && req.body?.consent !== true) {
+    const founding = (await foundingStatus()).active && !user.sub_plan?.startsWith('founding-');
+    const plan: PlanKey = founding ? `founding-${interval}` : interval;
+    return res.status(400).json({ error: 'Please tick the box to agree to the automatic-renewal terms.', disclosure: renewalDisclosure(plan), plan });
+  }
+  const founding = billingMode === 'disabled' ? false : await claimFoundingSpot(user.id);
   const plan: PlanKey = founding ? `founding-${interval}` : interval;
 
   // Automatic-renewal consent: the customer must tick the box showing the exact terms for the
   // plan they're actually charged (founding or regular). The wording is recorded as proof.
   if (billingMode !== 'disabled') {
     const expected = renewalDisclosure(plan);
-    if (req.body?.consent !== true) {
-      return res.status(400).json({ error: 'Please tick the box to agree to the automatic-renewal terms.', disclosure: expected, plan });
-    }
     if (req.body?.disclosure !== expected) {
       // Price or offer changed since the page loaded (e.g. the founding offer just filled up).
+      if (founding) await releaseFoundingSpot(user.id);
       return res.status(409).json({ error: 'The plan terms have changed. Please review them and agree again.', disclosure: expected, plan });
     }
     await db.run(
@@ -91,30 +143,41 @@ billingRouter.post('/checkout', requireAuth, async (req, res) => {
     // Local development only: grant a subscription without payment.
     const end = Math.floor(Date.now() / 1000) + (interval === 'annual' ? 365 : 30) * 86400;
     await db.run("UPDATE users SET sub_status='active', sub_plan=?, sub_period_end=? WHERE id=?", [plan, end, user.id]);
+    await releaseFoundingSpot(user.id); // now counted as a founding member instead
     return res.json({ url: `${APP_URL}/account?checkout=success&demo=1` });
   }
-  if (!stripe) return res.status(503).json({ error: 'Billing is not configured yet.' });
-  const price = founding ? FOUNDING_PRICES[interval] : PRICES[interval];
-  if (!price) return res.status(503).json({ error: `No Stripe price configured for the ${interval} plan.` });
+  let started = false;
+  try {
+    if (!stripe) return res.status(503).json({ error: 'Billing is not configured yet.' });
+    const price = founding ? FOUNDING_PRICES[interval] : PRICES[interval];
+    if (!price) return res.status(503).json({ error: `No Stripe price configured for the ${interval} plan.` });
 
-  let customer = user.stripe_customer_id;
-  if (!customer) {
-    const c = await stripe.customers.create({ email: user.email, name: user.name, metadata: { userId: String(user.id) } });
-    customer = c.id;
-    await db.run('UPDATE users SET stripe_customer_id=? WHERE id=?', [customer, user.id]);
+    let customer = user.stripe_customer_id;
+    if (!customer) {
+      const c = await stripe.customers.create({ email: user.email, name: user.name, metadata: { userId: String(user.id) } });
+      customer = c.id;
+      await db.run('UPDATE users SET stripe_customer_id=? WHERE id=?', [customer, user.id]);
+    }
+    const session = await stripe.checkout.sessions.create({
+      mode: 'subscription',
+      customer,
+      client_reference_id: String(user.id),
+      line_items: [{ price, quantity: 1 }],
+      allow_promotion_codes: true,
+      subscription_data: { metadata: { userId: String(user.id), plan } },
+      custom_text: { submit: { message: checkoutReminder(plan) } },
+      // Short-lived link, so a held founding spot can't be kept for a day.
+      expires_at: Math.floor(Date.now() / 1000) + CHECKOUT_MINUTES * 60,
+      success_url: `${APP_URL}/account?checkout=success`,
+      cancel_url: `${APP_URL}/pricing?checkout=cancelled`,
+    });
+    if (founding) await db.run('UPDATE founding_reservations SET session_id = ? WHERE user_id = ?', [session.id, user.id]);
+    started = true;
+    res.json({ url: session.url });
+  } finally {
+    // Checkout never started (misconfiguration or a Stripe error): give the spot back.
+    if (founding && !started) await releaseFoundingSpot(user.id).catch(() => {});
   }
-  const session = await stripe.checkout.sessions.create({
-    mode: 'subscription',
-    customer,
-    client_reference_id: String(user.id),
-    line_items: [{ price, quantity: 1 }],
-    allow_promotion_codes: true,
-    subscription_data: { metadata: { userId: String(user.id), plan } },
-    custom_text: { submit: { message: checkoutReminder(plan) } },
-    success_url: `${APP_URL}/account?checkout=success`,
-    cancel_url: `${APP_URL}/pricing?checkout=cancelled`,
-  });
-  res.json({ url: session.url });
 });
 
 billingRouter.post('/portal', requireAuth, async (req, res) => {
@@ -174,6 +237,9 @@ async function applySubscription(sub: Stripe.Subscription) {
       [customer, sub.id, sub.status, plan, periodEnd, cancelAtEnd, startedAt, Number(userId)],
     );
   }
+
+  // The customer is now a subscriber (and, if founding, counted as a member): drop any held spot.
+  await db.run('DELETE FROM founding_reservations WHERE user_id IN (SELECT id FROM users WHERE stripe_subscription_id = ?)', [sub.id]);
 
   // Confirmation email, sent once per subscription when it first becomes active.
   if (sub.status === 'active' || sub.status === 'trialing') {
@@ -255,6 +321,10 @@ export const stripeWebhook = [
         }
         break;
       }
+      case 'checkout.session.expired':
+        // Abandoned checkout: give the held founding spot back right away.
+        await db.run('DELETE FROM founding_reservations WHERE session_id = ?', [event.data.object.id]);
+        break;
       case 'customer.subscription.created':
       case 'customer.subscription.updated':
       case 'customer.subscription.deleted':

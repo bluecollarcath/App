@@ -203,6 +203,7 @@ app.post('/api/account/delete', requireAuth, limits.password, async (req, res) =
   // Automatic-renewal consent records are kept 3 years as proof of consent, detached from the account.
   await db.run('UPDATE subscription_consents SET user_id = NULL WHERE user_id = ?', [user.id]);
   await db.run('DELETE FROM billing_notices WHERE user_id = ?', [user.id]);
+  await db.run('DELETE FROM founding_reservations WHERE user_id = ?', [user.id]);
   await db.run('DELETE FROM users WHERE id = ?', [user.id]);
   res.json({ ok: true });
 });

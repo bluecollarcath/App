@@ -19,7 +19,8 @@ export default function Pricing() {
   const { user } = useAuth();
   const [params] = useSearchParams();
   const { data: config } = useApi<SiteConfig>('/config');
-  const founding = !!config?.founding?.active;
+  // Former founding members rejoin at the regular price (as the renewal terms say).
+  const founding = !!config?.founding?.active && !user?.plan?.startsWith('founding-');
   const spots = config?.founding?.remaining;
 
   return (

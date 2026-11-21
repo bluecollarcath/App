@@ -88,6 +88,7 @@ const co = await api('/api/billing/checkout', { method: 'POST', token, body: { p
 ok(co.status >= 500 && co.status < 600 && typeof co.data === 'object', `with consent, reaches Stripe (fails cleanly with fake key: ${co.status})`, JSON.stringify(co.data).slice(0, 200));
 const consents = (await api('/api/billing/consents', { token })).data.consents;
 ok(consents.length === 1 && consents[0].plan === 'founding-monthly' && consents[0].disclosure === c0.data.disclosure && consents[0].version, 'consent recorded with plan, exact wording and version', JSON.stringify(consents));
+ok((await api('/api/config')).data.founding.remaining === cfg.data.founding.remaining, 'a checkout that fails to start gives its founding spot back');
 
 console.log('Webhooks');
 const bad = await api('/api/stripe/webhook', { method: 'POST', raw: '{"type":"x"}', headers: { 'content-type': 'application/json', 'stripe-signature': 't=1,v1=bad' } });
