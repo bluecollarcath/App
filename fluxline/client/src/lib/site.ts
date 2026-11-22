@@ -15,4 +15,10 @@ export const SITE = {
   /** Date the current legal pages took effect. Update it whenever you change them. */
   legalEffectiveDate: 'November 7, 2026',
   refundWindowDays: 14,
+  /** Public launch: midnight Central time, January 4, 2027. The countdown and top bar key off this. */
+  launchAt: '2027-01-04T00:00:00-06:00',
+  /** When the countdown battery started charging (0%): the first line of Ohmentum's code. */
+  chargeStart: '2026-11-03T00:00:00-06:00',
+  /** How long after launch the home page keeps saying "We're live." */
+  liveBannerDays: 14,
 };

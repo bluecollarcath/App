@@ -96,3 +96,10 @@ body { @apply bg-white text-slate-800 antialiased; }
   .summary-print .lesson-sum { break-inside: avoid; }
   .summary-print .unit-sum h2 { break-after: avoid; }
 }
+
+/* Launch countdown battery */
+@keyframes charge-pulse { 0%, 100% { opacity: 0.35; } 50% { opacity: 1; } }
+@keyframes charge-sweep { 0% { transform: translateX(-100%); } 100% { transform: translateX(250%); } }
+.charge-pulse { animation: charge-pulse 1.4s ease-in-out infinite; }
+.charge-sweep { animation: charge-sweep 2.6s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) { .charge-pulse, .charge-sweep { animation: none; } }

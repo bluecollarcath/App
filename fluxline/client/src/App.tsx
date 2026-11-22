@@ -19,8 +19,9 @@ import { ForgotPassword, ResetPassword } from './pages/PasswordPages';
 import { Privacy, Refunds, Terms } from './pages/Legal';
 
 export default function App() {
-  const { pathname } = useLocation();
-  useEffect(() => { window.scrollTo(0, 0); }, [pathname]);
+  const { pathname, hash } = useLocation();
+  // New page: start at the top, unless the link points at a spot on the page (like /#launch).
+  useEffect(() => { if (!hash) window.scrollTo(0, 0); }, [pathname, hash]);
 
   return (
     <Routes>

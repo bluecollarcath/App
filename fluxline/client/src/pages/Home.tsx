@@ -6,6 +6,7 @@ import { FOUNDING_PLANS, PLANS, type SiteConfig } from '../lib/api';
 import { InlineMd } from '../components/Markdown';
 import CourseCard from '../components/CourseCard';
 import MhoTeaser from '../components/MhoTeaser';
+import { LaunchCountdown } from '../components/Launch';
 
 const FAQ = [
   ['Is this really college-level?', 'Yes. The curriculum follows the sequence of an ABET-accredited B.S. in Electrical Engineering — the same topics, notation, and depth you would see in university lectures and textbooks, from calculus and circuit analysis through electromagnetics, control, DSP, and power systems.'],
@@ -73,6 +74,8 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      <LaunchCountdown />
 
       {/* Stats */}
       <section className="border-b border-slate-200 bg-slate-50">

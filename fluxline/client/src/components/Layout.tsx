@@ -3,6 +3,7 @@ import { Link, NavLink, Outlet } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
 import { useAuth } from '../lib/auth';
 import { IS_PREVIEW } from '../lib/api';
+import { LaunchBar } from './Launch';
 
 const OMEGA = 'M5 36 H15 V30.5 A13 13 0 1 1 25 30.5 V36 H35';
 
@@ -59,6 +60,7 @@ export default function Layout() {
           Preview version: accounts and progress are saved only in this browser, and subscribing is simulated. No payment is taken.
         </div>
       )}
+      <LaunchBar />
       <header className="print:hidden sticky top-0 z-40 border-b border-slate-800 bg-ink/95 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
           <div className="flex items-center gap-8">
