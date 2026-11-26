@@ -165,7 +165,7 @@ export default function Home() {
           <h2 className="text-3xl font-extrabold tracking-tight sm:text-4xl">One subscription. The entire degree's worth of material.</h2>
           <p className="mt-4 text-lg text-slate-300">
             {founding
-              ? <>Founding Members pay just ${FOUNDING_PLANS.monthly.price}/month or ${FOUNDING_PLANS.annual.price}/year (regularly ${PLANS.monthly.price} and ${PLANS.annual.price}), locked in for as long as you stay subscribed.</>
+              ? <>Founding Members pay just ${FOUNDING_PLANS.monthly.price}/month or ${FOUNDING_PLANS.annual.price}/year (regularly ${PLANS.monthly.price} and ${PLANS.annual.price}), locked in for as long as you stay subscribed.{config?.founding?.limit ? ` Founding pricing is limited to the first ${config.founding.limit} members.` : ''}</>
               : <>${PLANS.monthly.price}/month or ${PLANS.annual.price}/year, less than a single textbook. Start free; upgrade when you're ready.</>}
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">

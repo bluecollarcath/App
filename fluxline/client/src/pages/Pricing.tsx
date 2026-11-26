@@ -22,6 +22,7 @@ export default function Pricing() {
   // Former founding members rejoin at the regular price (as the renewal terms say).
   const founding = !!config?.founding?.active && !user?.plan?.startsWith('founding-');
   const spots = config?.founding?.remaining;
+  const limit = config?.founding?.limit;
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
@@ -29,7 +30,7 @@ export default function Pricing() {
         <h1 className="text-4xl font-extrabold tracking-tight text-ink sm:text-5xl">{founding ? 'Founding Member pricing' : 'Simple pricing'}</h1>
         <p className="mt-4 text-lg text-slate-600">
           {founding
-            ? 'Join early and lock in a lower price for as long as you stay subscribed, even after prices go up.'
+            ? <>{limit ? <><strong className="font-semibold text-ink">Founding Member pricing is limited to the first {limit} subscribers.</strong>{' '}</> : null}Join early and lock in a lower price for as long as you stay subscribed, even after prices go up.</>
             : 'One subscription unlocks the entire electrical engineering curriculum.'}
         </p>
         {user && !user.subscribed && (params.get('plan') === 'monthly' || params.get('plan') === 'annual') && (
@@ -43,12 +44,12 @@ export default function Pricing() {
           <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand-grad text-ink"><Zap size={22} /></div>
           <div className="flex-1">
             <div className="font-bold">The full curriculum is live: all 28 courses, from precalculus, physics and circuits to quantum mechanics, PCB design, power systems, RF and VLSI, each with quizzes and a final exam.</div>
-            <div className="mt-0.5 text-sm text-slate-300">Founding Members pay about half the regular price, and keep that price for life while subscribed.</div>
+            <div className="mt-0.5 text-sm text-slate-300">Founding Members pay about half the regular price, and keep that price for life while subscribed.{limit ? ` Only the first ${limit} subscribers get it; once those spots are gone, new members pay the regular price.` : ''}</div>
           </div>
           {spots != null && (
             <div className="shrink-0 rounded-xl border border-emerald-400/30 bg-emerald-400/10 px-4 py-2 text-center">
               <div className="text-2xl font-extrabold text-emerald-300">{spots}</div>
-              <div className="text-xs text-slate-300">spots left</div>
+              <div className="text-xs text-slate-300">{limit ? `of ${limit} spots left` : 'spots left'}</div>
             </div>
           )}
         </div>
